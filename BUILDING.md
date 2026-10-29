@@ -53,8 +53,13 @@ vid_restart
 The resolution setting of the menus lists "Desktop" and every mode that
 fits the monitor; the original menus only offered 4:3 modes.
 
-Alt+Enter toggles fullscreen. Old `DoomConfig.cfg` files from the original
-game set `r_mode 3` (640x480); delete the file or `seta r_mode -2`.
+Alt+Enter toggles fullscreen.
+
+The first start uses the resolution of the monitor (`r_mode -2`), a
+resolution picked in the menus or the console is saved and used from then
+on. A `DoomConfig.cfg` from the original game is switched to the monitor
+resolution once (it has one of the old 4:3 modes, usually 640x480); the
+config remembers that with `com_configVersion`.
 
 ## Prebuilt Linux binaries and releases
 

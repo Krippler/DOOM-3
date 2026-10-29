@@ -21,10 +21,10 @@ The game data is not included. No CD key is needed.
 - Includes the native 64-bit game code for DOOM 3 (`base.so`) and Resurrection of Evil (`d3xp.so`).
 
 ## Fixes
+- The game starts at the resolution of the monitor until you pick another one, which is then always used. A `DoomConfig.cfg` from the original game no longer starts it at 640x480: it is switched to the monitor resolution once.
 - Smooth mouse look: the 60 Hz game timer ran a third of its tics in back-to-back pairs (a bug in the original Linux timer loop), and the mouse was sampled at the start of each frame instead of at each tic. Mouse movement is also merged per frame so high polling rate mice can't overflow the input buffers.
 - New games no longer stop with "locals stack underflow" while loading the first map: the script compiler sized entity and object values and object field pointers for 32-bit systems.
 - The resolution setting in the menus now lists the desktop resolution and all widescreen, ultrawide and 4K modes that fit the monitor.
 - Fixed a crash on the main menu (and in any other in-game video): the RoQ video decoder computed backwards motion offsets as 32-bit unsigned numbers.
-- Old `DoomConfig.cfg` files from the original game start it at 640x480. Delete them (`~/.doom3/base/DoomConfig.cfg` and `~/.local/share/doom3/base/DoomConfig.cfg`) or run `seta r_mode -2` in the console.
 
 See `README.txt` in the archive for details.

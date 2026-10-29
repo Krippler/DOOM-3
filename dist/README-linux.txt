@@ -75,6 +75,7 @@ g_hudScaleTo43 1 does the same for the HUD.
 
 Notes
 -----
-An old DoomConfig.cfg from the original game sets r_mode 3 (640x480);
-delete it or run "seta r_mode -2".  Save games and multiplayer are not
-compatible with the original 32 bit game.
+The game starts at the resolution of the monitor until another one is
+picked in the menus; that choice is saved.  A DoomConfig.cfg from the
+original game is switched to the monitor resolution once.  Save games and
+multiplayer are not compatible with the original 32 bit game.
