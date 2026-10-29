@@ -260,6 +260,9 @@ public:
 
 extern idRenderSystem *			renderSystem;
 
+// choices and values for the resolution setting (r_mode) of the menus
+void R_GetMenuModeList( idStr &choices, idStr &values );
+
 //
 // functions mainly intended for editor and dmap integration
 //

@@ -631,6 +631,57 @@ static bool R_GetModeInfo( int *width, int *height, int mode ) {
 
 /*
 ==================
+R_GetMenuModeList
+
+Choice and value lists for the resolution setting of the menus. The menus of
+the game only list the 4:3 modes, this offers the desktop resolution and all
+modes that fit on the monitor.
+==================
+*/
+void R_GetMenuModeList( idStr &choices, idStr &values ) {
+	int desktopWidth = 0, desktopHeight = 0;
+#ifdef ID_SDL
+	GLimp_GetDesktopSize( &desktopWidth, &desktopHeight );
+#endif
+
+	choices.Clear();
+	values.Clear();
+	if ( desktopWidth > 0 && desktopHeight > 0 ) {
+		choices += va( "\"Desktop (%dx%d)\";", desktopWidth, desktopHeight );
+	} else {
+		choices += "\"Desktop\";";
+	}
+	values += "-2;";
+
+	if ( r_mode.GetInteger() == -1 ) {
+		choices += va( "\"Custom (%dx%d)\";", r_customWidth.GetInteger(), r_customHeight.GetInteger() );
+		values += "-1;";
+	}
+
+	// skip the tiny modes below 640x480
+	for ( int i = 3; i < s_numVidModes; i++ ) {
+		const vidmode_t &vm = r_vidModes[i];
+		if ( desktopWidth > 0 && ( vm.width > desktopWidth || vm.height > desktopHeight ) && i != r_mode.GetInteger() ) {
+			continue;
+		}
+		// "Mode 21: 3440x1440  (21:9)" -> "3440x1440 (21:9)"
+		idStr desc = vm.description;
+		int colon = desc.Find( ':' );
+		if ( colon >= 0 ) {
+			desc = desc.Right( desc.Length() - colon - 1 );
+		}
+		desc.StripLeading( ' ' );
+		while ( desc.Find( "  " ) >= 0 ) {
+			desc.Replace( "  ", " " );
+		}
+		choices += va( "\"%s\";", desc.c_str() );
+		values += va( "%d;", i );
+	}
+}
+
+
+/*
+==================
 R_InitOpenGL
 
 This function is responsible for initializing a valid OpenGL subsystem

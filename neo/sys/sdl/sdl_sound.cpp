@@ -42,6 +42,9 @@ along with Doom 3 Source Code.  If not, see <http://www.gnu.org/licenses/>.
 #include <SDL.h>
 
 static idCVar s_sdlDevice( "s_sdlDevice", "", CVAR_SYSTEM | CVAR_ARCHIVE, "name of the SDL audio output device, empty for the system default" );
+// the sound settings of the menus have a driver choice, SDL picks the backend ( SDL_AUDIODRIVER )
+static const char *s_driverArgs[] = { "best", "oss", "alsa", NULL };
+static idCVar s_driver( "s_driver", s_driverArgs[0], CVAR_SYSTEM | CVAR_ARCHIVE, "unused, SDL picks the audio driver, set SDL_AUDIODRIVER to choose one", s_driverArgs, idCmdSystem::ArgCompletion_String<s_driverArgs> );
 static idCVar s_sdlMaxQueuedBlocks( "s_sdlMaxQueuedBlocks", "3", CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_INTEGER, "maximum number of mixed blocks queued to the audio device ( latency )", 2, 16 );
 
 class idAudioHardwareSDL : public idAudioHardware {
