@@ -11,12 +11,13 @@ project(doom3 C CXX)
 # directory that contains your "base" (and optionally "d3xp") data folder.
 
 option(DOOM3_GAME_LIBS   "Build the game libraries (base and d3xp)" ON)
-option(DOOM3_DEDICATED   "Build a dedicated server executable" OFF)
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 	set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Build type" FORCE)
 endif()
 
+# the bundled libjpeg and Ogg Vorbis are old C code, newer compilers default to C23
+set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -431,6 +432,7 @@ set(ENGINE_SOURCES
 add_executable(doom3 WIN32 ${ENGINE_SOURCES})
 target_compile_definitions(doom3 PRIVATE __DOOM_DLL__)
 target_link_libraries(doom3 idlib thirdparty ${SDL2_TARGETS} OpenGL::GL Threads::Threads ${SYS_LIBS})
+install(TARGETS doom3 RUNTIME DESTINATION .)
 
 # ---------------------------------------------------------------------------
 # game libraries
@@ -528,6 +530,8 @@ if(DOOM3_GAME_LIBS)
 	target_link_libraries(d3xp idlib_game)
 
 	foreach(t base d3xp)
+		# the engine loads the game libraries from the directory of the executable
+		install(TARGETS ${t} LIBRARY DESTINATION . RUNTIME DESTINATION .)
 		set_target_properties(${t} PROPERTIES PREFIX "")
 		if(NOT WIN32)
 			set_target_properties(${t} PROPERTIES C_VISIBILITY_PRESET hidden CXX_VISIBILITY_PRESET hidden)

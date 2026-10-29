@@ -53,6 +53,26 @@ vid_restart
 Alt+Enter toggles fullscreen. Old `DoomConfig.cfg` files from the original
 game set `r_mode 3` (640x480); delete the file or `seta r_mode -2`.
 
+## Prebuilt Linux binaries and releases
+
+GitHub Actions (`.github/workflows/build-linux.yml`) builds a ready to run
+package, `doom3-linux-x86_64.tar.gz`, on every push and pull request, and
+checks that the code also builds on Arch Linux. Download it from the
+*Actions* tab (artifact `doom3-linux-x86_64`).
+
+To cut a release, push a version tag; the package is attached to a GitHub
+release with the notes from `dist/RELEASE_NOTES.md`:
+
+```sh
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+Or run the workflow by hand from the *Actions* tab and fill in
+`release_tag` (and the commit or branch it should point at). The archive
+contains `doom3`, `base.so`, `d3xp.so`, `README.txt` (from
+`dist/README-linux.txt`) and empty `base/` and `d3xp/` folders for the paks.
+
 ## Building on Linux
 
 ```sh
@@ -62,9 +82,12 @@ sudo apt install build-essential cmake libsdl2-dev libgl-dev
 
 cmake -S neo -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j
+cmake --install build --prefix ~/games/doom3
 ```
 
-This produces `build/doom3`, `build/base.so` and `build/d3xp.so`.
+This produces `doom3`, `base.so` and `d3xp.so`. Copy the paks of your copy
+of the game into `~/games/doom3/base` (and `d3xp`) and run
+`~/games/doom3/doom3`.
 
 ## Building for Windows (64-bit)
 

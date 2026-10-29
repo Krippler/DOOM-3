@@ -1,0 +1,104 @@
+name: Linux build
+
+on:
+  push:
+    branches: ['**']
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Create a release with this tag (e.g. v1.0.0), leave empty to only build'
+        required: false
+        default: ''
+      release_target:
+        description: 'Commit or branch the new tag points at'
+        required: false
+        default: 'master'
+
+permissions:
+  contents: write
+
+jobs:
+  linux-x86_64:
+    name: Linux x86_64 (portable)
+    # glibc is backwards compatible, so a binary built here also runs on
+    # rolling distributions with a newer glibc such as Arch and CachyOS
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build libsdl2-dev libgl-dev
+
+      - name: Configure
+        run: cmake -S neo -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Package
+        run: |
+          set -e
+          PKG=doom3-linux-x86_64
+          cmake --install build --prefix "dist/$PKG" --strip
+          cp dist/README-linux.txt "dist/$PKG/README.txt"
+          cp COPYING.txt "dist/$PKG/"
+          mkdir -p "dist/$PKG/base" "dist/$PKG/d3xp"
+          cp dist/base/PUT_PAK_FILES_HERE.txt "dist/$PKG/base/"
+          cp dist/d3xp/PUT_PAK_FILES_HERE.txt "dist/$PKG/d3xp/"
+          tar -C dist -czf "dist/$PKG.tar.gz" "$PKG"
+          ls -l "dist/$PKG" "dist/$PKG/base" "dist/$PKG/d3xp"
+          file "dist/$PKG/doom3" "dist/$PKG/base.so" "dist/$PKG/d3xp.so"
+
+      - name: Smoke test
+        run: |
+          PKG=dist/doom3-linux-x86_64
+          # every library must resolve and the game code must export its entry point
+          if ldd "$PKG/doom3" "$PKG/base.so" "$PKG/d3xp.so" | grep "not found"; then exit 1; fi
+          nm -D "$PKG/base.so" | grep -q " T GetGameAPI"
+          nm -D "$PKG/d3xp.so" | grep -q " T GetGameAPI"
+          # no game data here, the engine must start and fail cleanly on the missing paks
+          out=$(cd "$PKG" && HOME="$RUNNER_TEMP" timeout 30 ./doom3 +quit < /dev/null 2>&1 || true)
+          echo "$out"
+          echo "$out" | grep -q "DOOM 1.3.1.1304 linux-x86_64"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: doom3-linux-x86_64
+          path: dist/doom3-linux-x86_64.tar.gz
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: DOOM 3 ${{ github.ref_name }} for 64-bit Linux
+          body_path: dist/RELEASE_NOTES.md
+          files: dist/doom3-linux-x86_64.tar.gz
+
+      - name: Publish release (manual run)
+        if: github.event_name == 'workflow_dispatch' && inputs.release_tag != ''
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.release_tag }}
+          target_commitish: ${{ inputs.release_target }}
+          name: DOOM 3 ${{ inputs.release_tag }} for 64-bit Linux
+          body_path: dist/RELEASE_NOTES.md
+          files: dist/doom3-linux-x86_64.tar.gz
+
+  arch:
+    name: Arch Linux (CachyOS base) build check
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    steps:
+      - name: Install dependencies
+        run: pacman -Syu --noconfirm --needed base-devel cmake ninja sdl2 mesa git
+
+      - uses: actions/checkout@v4
+
+      - name: Build
+        run: |
+          cmake -S neo -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build build
