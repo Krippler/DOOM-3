@@ -62,53 +62,27 @@ Sys_AsyncThread
 =================
 */
 void Sys_AsyncThread( void ) {
-	int now;
-	int next;
-	int	want_sleep;
+	// tic number N starts at N * USERCMD_MSEC milliseconds
+	int ticked = Sys_Milliseconds() / USERCMD_MSEC;
 
-	// multi tick compensate for poor schedulers (Linux 2.4)
-	int ticked, to_ticked;
-	now = Sys_Milliseconds();
-	ticked = now >> 4;
-	while (1) {
-		// sleep
-		now = Sys_Milliseconds();		
-		next = ( now & 0xFFFFFFF0 ) + 0x10;
-		want_sleep = ( next-now-1 ) * 1000;
-		if ( want_sleep > 0 ) {
-			usleep( want_sleep ); // sleep 1ms less than true target
-		}
-		
-		// compensate if we slept too long
-		now = Sys_Milliseconds();
-		to_ticked = now >> 4;
-		
-		// show ticking statistics - every 100 ticks, print a summary
-		#if 0
-			#define STAT_BUF 100
-			static int stats[STAT_BUF];
-			static int counter = 0;
-			// how many ticks to play
-			stats[counter] = to_ticked - ticked;
-			counter++;
-			if (counter == STAT_BUF) {
-				Sys_DebugPrintf("\n");
-				for( int i = 0; i < STAT_BUF; i++) {
-					if ( ! (i & 0xf) ) {
-						Sys_DebugPrintf("\n");
-					}
-					Sys_DebugPrintf( "%d ", stats[i] );
-				}
-				Sys_DebugPrintf("\n");
-				counter = 0;
-			}
-		#endif
-		
+	while ( 1 ) {
+		// run the tics that are due before sleeping, the old loop slept for a
+		// whole tic when it woke up right at the boundary and then ran two tics
+		// back to back, which made frames come in pairs
+		int to_ticked = Sys_Milliseconds() / USERCMD_MSEC;
 		while ( ticked < to_ticked ) {
 			common->Async();
 			ticked++;
 			Sys_TriggerEvent( TRIGGER_EVENT_ONE );
 		}
+
+		// sleep until the next tic starts
+		long long wake = ( long long )( ticked + 1 ) * USERCMD_MSEC * 1000;
+		long long now = Posix_Microseconds();
+		if ( wake > now ) {
+			usleep( wake - now );
+		}
+
 		// thread exit
 		pthread_testcancel();
 	}
@@ -139,11 +113,12 @@ const char *Sys_EXEPath( void ) {
 
 	buf[ 0 ] = '\0';
 	sprintf( linkpath, "/proc/%d/exe", getpid() );
-	len = readlink( linkpath.c_str(), buf, sizeof( buf ) );
+	len = readlink( linkpath.c_str(), buf, sizeof( buf ) - 1 );
 	if ( len == -1 ) {
 		Sys_Printf("couldn't stat exe path link %s\n", linkpath.c_str());
-		buf[ len ] = '\0';
+		len = 0;
 	}
+	buf[ len ] = '\0';
 	return buf;
 }
 

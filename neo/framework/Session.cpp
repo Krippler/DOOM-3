@@ -2623,6 +2623,11 @@ void idSessionLocal::Frame() {
 	}
 #endif
 
+	// sample the input now that the tic has started, so every usercmd gets the
+	// mouse movement of one tic instead of the time between two frame starts,
+	// which varies with the rendering time and makes looking around jittery
+	Sys_GenerateEvents();
+
 	if ( authEmitTimeout ) {
 		// waiting for a game auth
 		if ( Sys_Milliseconds() > authEmitTimeout ) {
