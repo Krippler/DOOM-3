@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=DOOM 3: Resurrection of Evil
+Comment=DOOM 3 expansion (64-bit GPL engine, needs the original game data)
+Exec=doom3 +set fs_game d3xp
+Icon=doom3
+Terminal=false
+Categories=Game;ActionGame;

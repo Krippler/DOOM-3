@@ -55,10 +55,16 @@ game set `r_mode 3` (640x480); delete the file or `seta r_mode -2`.
 
 ## Prebuilt Linux binaries and releases
 
-GitHub Actions (`.github/workflows/build-linux.yml`) builds a ready to run
-package, `doom3-linux-x86_64.tar.gz`, on every push and pull request, and
-checks that the code also builds on Arch Linux. Download it from the
-*Actions* tab (artifact `doom3-linux-x86_64`).
+GitHub Actions (`.github/workflows/build-linux.yml`) builds on every push
+and pull request:
+
+* `doom3-linux-x86_64.tar.gz`, a ready to run folder for any distribution
+  (artifact `doom3-linux-x86_64`).
+* `doom3-gpl-<version>-1-x86_64.pkg.tar.zst`, an installable Arch Linux /
+  CachyOS package built from `dist/arch/PKGBUILD` (artifact
+  `doom3-gpl-arch`). CI installs it with `pacman -U` and starts it.
+
+Download them from the *Actions* tab; releases carry both.
 
 To cut a release, push a version tag; the package is attached to a GitHub
 release with the notes from `dist/RELEASE_NOTES.md`:
@@ -72,6 +78,21 @@ Or run the workflow by hand from the *Actions* tab and fill in
 `release_tag` (and the commit or branch it should point at). The archive
 contains `doom3`, `base.so`, `d3xp.so`, `README.txt` (from
 `dist/README-linux.txt`) and empty `base/` and `d3xp/` folders for the paks.
+
+## Arch Linux / CachyOS package
+
+Build and install the package from a checkout:
+
+```sh
+cd dist/arch
+makepkg -si
+```
+
+It installs the engine to `/usr/lib/doom3` and a `doom3` launcher to
+`/usr/bin`, plus menu entries. The launcher finds the game data in
+`$DOOM3_DATA`, `~/.local/share/doom3`, `~/.doom3`, the Steam copy of
+DOOM 3, `/usr/share/doom3` or `/usr/share/games/doom3`, in that order.
+The `pkgver` in the PKGBUILD is set from the release tag in CI.
 
 ## Building on Linux
 
