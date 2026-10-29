@@ -20,4 +20,8 @@ The game data is not included. No CD key is needed.
 - 16:9, 16:10, 21:9, 32:9 and 4K resolution presets; `listModes` lists them, `r_mode -1` with `r_customWidth` / `r_customHeight` sets any size, `vid_restart` applies changes, and Alt+Enter toggles fullscreen.
 - Includes the native 64-bit game code for DOOM 3 (`base.so`) and Resurrection of Evil (`d3xp.so`).
 
+## Fixes
+- Fixed a crash on the main menu (and in any other in-game video): the RoQ video decoder computed backwards motion offsets as 32-bit unsigned numbers.
+- Old `DoomConfig.cfg` files from the original game start it at 640x480. Delete them (`~/.doom3/base/DoomConfig.cfg` and `~/.local/share/doom3/base/DoomConfig.cfg`) or run `seta r_mode -2` in the console.
+
 See `README.txt` in the archive for details.
