@@ -575,10 +575,12 @@ bool Swap_IsBigEndian( void ) {
 
 void AssertFailed( const char *file, int line, const char *expression ) {
 	idLib::sys->DebugPrintf( "\n\nASSERTION FAILED!\n%s(%d): '%s'\n", file, line, expression );
-#ifdef _WIN32
-	__asm int 0x03
-#elif defined( __linux__ )
+#if defined( _MSC_VER )
+	__debugbreak();
+#elif defined( __i386__ ) || defined( __x86_64__ )
 	__asm__ __volatile__ ("int $0x03");
+#elif defined( __linux__ )
+	__builtin_trap();
 #elif defined( MACOS_X )
 	kill( getpid(), SIGINT );
 #endif

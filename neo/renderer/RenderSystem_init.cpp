@@ -48,11 +48,11 @@ idCVar r_inhibitFragmentProgram( "r_inhibitFragmentProgram", "0", CVAR_RENDERER 
 idCVar r_glDriver( "r_glDriver", "", CVAR_RENDERER, "\"opengl32\", etc." );
 idCVar r_useLightPortalFlow( "r_useLightPortalFlow", "1", CVAR_RENDERER | CVAR_BOOL, "use a more precise area reference determination" );
 idCVar r_multiSamples( "r_multiSamples", "0", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_INTEGER, "number of antialiasing samples" );
-idCVar r_mode( "r_mode", "3", CVAR_ARCHIVE | CVAR_RENDERER | CVAR_INTEGER, "video mode number" );
+idCVar r_mode( "r_mode", "-2", CVAR_ARCHIVE | CVAR_RENDERER | CVAR_INTEGER, "video mode number, -1 = r_customWidth x r_customHeight, -2 = desktop resolution. listModes shows all modes" );
 idCVar r_displayRefresh( "r_displayRefresh", "0", CVAR_RENDERER | CVAR_INTEGER | CVAR_NOCHEAT, "optional display refresh rate option for vid mode", 0.0f, 200.0f );
 idCVar r_fullscreen( "r_fullscreen", "1", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_BOOL, "0 = windowed, 1 = full screen" );
-idCVar r_customWidth( "r_customWidth", "720", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_INTEGER, "custom screen width. set r_mode to -1 to activate" );
-idCVar r_customHeight( "r_customHeight", "486", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_INTEGER, "custom screen height. set r_mode to -1 to activate" );
+idCVar r_customWidth( "r_customWidth", "1920", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_INTEGER, "custom screen width. set r_mode to -1 to activate" );
+idCVar r_customHeight( "r_customHeight", "1080", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_INTEGER, "custom screen height. set r_mode to -1 to activate" );
 idCVar r_singleTriangle( "r_singleTriangle", "0", CVAR_RENDERER | CVAR_BOOL, "only draw a single triangle per primitive" );
 idCVar r_checkBounds( "r_checkBounds", "0", CVAR_RENDERER | CVAR_BOOL, "compare all surface bounds with precalculated ones" );
 
@@ -554,15 +554,35 @@ typedef struct vidmode_s {
 } vidmode_t;
 
 vidmode_t r_vidModes[] = {
-    { "Mode  0: 320x240",		320,	240 },
-    { "Mode  1: 400x300",		400,	300 },
-    { "Mode  2: 512x384",		512,	384 },
-    { "Mode  3: 640x480",		640,	480 },
-    { "Mode  4: 800x600",		800,	600 },
-    { "Mode  5: 1024x768",		1024,	768 },
-    { "Mode  6: 1152x864",		1152,	864 },
-    { "Mode  7: 1280x1024",		1280,	1024 },
-    { "Mode  8: 1600x1200",		1600,	1200 },
+    { "Mode  0: 320x240",				320,	240 },
+    { "Mode  1: 400x300",				400,	300 },
+    { "Mode  2: 512x384",				512,	384 },
+    { "Mode  3: 640x480",				640,	480 },
+    { "Mode  4: 800x600",				800,	600 },
+    { "Mode  5: 1024x768",				1024,	768 },
+    { "Mode  6: 1152x864",				1152,	864 },
+    { "Mode  7: 1280x1024",				1280,	1024 },
+    { "Mode  8: 1600x1200",				1600,	1200 },
+	// widescreen
+    { "Mode  9: 1280x720   (16:9)",		1280,	720 },
+    { "Mode 10: 1366x768   (16:9)",		1366,	768 },
+    { "Mode 11: 1440x900   (16:10)",	1440,	900 },
+    { "Mode 12: 1600x900   (16:9)",		1600,	900 },
+    { "Mode 13: 1680x1050  (16:10)",	1680,	1050 },
+    { "Mode 14: 1920x1080  (16:9)",		1920,	1080 },
+    { "Mode 15: 1920x1200  (16:10)",	1920,	1200 },
+    { "Mode 16: 2560x1440  (16:9)",		2560,	1440 },
+    { "Mode 17: 2560x1600  (16:10)",	2560,	1600 },
+    { "Mode 18: 3200x1800  (16:9)",		3200,	1800 },
+    { "Mode 19: 3840x2160  (16:9, 4K UHD)",	3840,	2160 },
+	// ultrawide
+    { "Mode 20: 2560x1080  (21:9)",		2560,	1080 },
+    { "Mode 21: 3440x1440  (21:9)",		3440,	1440 },
+    { "Mode 22: 3840x1600  (21:9)",		3840,	1600 },
+    { "Mode 23: 5120x2160  (21:9)",		5120,	2160 },
+    { "Mode 24: 3840x1080  (32:9)",		3840,	1080 },
+    { "Mode 25: 5120x1440  (32:9)",		5120,	1440 },
+    { "Mode 26: 4096x2160  (DCI 4K)",	4096,	2160 },
 };
 static int	s_numVidModes = ( sizeof( r_vidModes ) / sizeof( r_vidModes[0] ) );
 
@@ -573,11 +593,21 @@ static bool R_GetModeInfo( int *width, int *height, int mode ) {
 #endif
 	vidmode_t	*vm;
 
-    if ( mode < -1 ) {
+    if ( mode < -2 ) {
         return false;
 	}
 	if ( mode >= s_numVidModes ) {
 		return false;
+	}
+
+	if ( mode == -2 ) {
+#ifdef ID_SDL
+		// native resolution of the monitor
+		if ( GLimp_GetDesktopSize( width, height ) ) {
+			return true;
+		}
+#endif
+		mode = -1;
 	}
 
 	if ( mode == -1 ) {
@@ -655,7 +685,11 @@ void R_InitOpenGL( void ) {
 
 		// if we failed, set everything back to "safe mode"
 		// and try again
+#ifdef ID_SDL
+		r_mode.SetInteger( -2 );
+#else
 		r_mode.SetInteger( 3 );
+#endif
 		r_fullscreen.SetInteger( 1 );
 		r_displayRefresh.SetInteger( 0 );
 		r_multiSamples.SetInteger( 0 );
@@ -815,6 +849,8 @@ static void R_ListModes_f( const idCmdArgs &args ) {
 	int i;
 
 	common->Printf( "\n" );
+	common->Printf( "Mode -2: desktop resolution\n" );
+	common->Printf( "Mode -1: r_customWidth x r_customHeight ( %d x %d )\n", r_customWidth.GetInteger(), r_customHeight.GetInteger() );
 	for ( i = 0; i < s_numVidModes; i++ ) {
 		common->Printf( "%s\n", r_vidModes[i].description );
 	}
@@ -1186,7 +1222,8 @@ void R_ReadTiledPixels( int width, int height, byte *buffer, renderView_t *ref =
 				h = height - yo;
 			}
 
-			qglReadBuffer( GL_FRONT );
+			qglReadBuffer( r_frontBuffer.GetBool() ? GL_FRONT : GL_BACK );
+			qglPixelStorei( GL_PACK_ALIGNMENT, 4 );
 			qglReadPixels( 0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, temp ); 
 
 			int	row = ( w * 3 + 3 ) & ~3;		// OpenGL pads to dword boundaries
@@ -1934,6 +1971,7 @@ void R_VidRestart_f( const idCmdArgs &args ) {
 		glimpParms_t	parms;
 		parms.width = glConfig.vidWidth;
 		parms.height = glConfig.vidHeight;
+		R_GetModeInfo( &parms.width, &parms.height, r_mode.GetInteger() );
 		parms.fullScreen = ( forceWindow ) ? false : r_fullscreen.GetBool();
 		parms.displayHz = r_displayRefresh.GetInteger();
 		parms.multiSamples = r_multiSamples.GetInteger();

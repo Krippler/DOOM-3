@@ -80,6 +80,13 @@ public:
 	void				SetCursor(int n);
 
 	void				AdjustCoords(float *x, float *y, float *w, float *h);
+
+	// full screen menus are designed for 640x480, on wide screens they can be drawn
+	// in a centered 4:3 area instead of being stretched
+	void				SetMenuScaleFix( bool enable );
+	bool				IsMenuScaleFixActive() const { return fixScaleForMenu; }
+	// applies only the 4:3 menu correction, the result is still in 640x480 virtual coordinates
+	void				AdjustCoordsForMenu( float *x, float *y, float *w, float *h );
 	bool				ClippedCoords(float *x, float *y, float *w, float *h);
 	bool				ClippedCoords(float *x, float *y, float *w, float *h, float *s1, float *t1, float *s2, float *t2);
 
@@ -155,6 +162,10 @@ private:
 	idStr fontLang;
 
 	bool				enableClipping;
+
+	bool				fixScaleForMenu;
+	float				menuScaleX;
+	float				menuOffsetX;
 
 	bool				overStrikeMode;
 

@@ -42,6 +42,8 @@ public:
 	virtual void				HandleNamedEvent( const char* namedEvent );
 	virtual void				Redraw( int time );
 	virtual void				DrawCursor();
+
+	bool						ScaleTo43() const;
 	virtual const idDict &		State() const;
 	virtual void				DeleteStateVar( const char *varName );
 	virtual void				SetStateString( const char *varName, const char *value );

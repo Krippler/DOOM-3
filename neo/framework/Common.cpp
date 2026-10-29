@@ -60,7 +60,9 @@ idCVar com_memoryMarker( "com_memoryMarker", "-1", CVAR_INTEGER | CVAR_SYSTEM | 
 idCVar com_preciseTic( "com_preciseTic", "1", CVAR_BOOL|CVAR_SYSTEM, "run one game tick every async thread update" );
 idCVar com_asyncInput( "com_asyncInput", "0", CVAR_BOOL|CVAR_SYSTEM, "sample input from the async thread" );
 #define ASYNCSOUND_INFO "0: mix sound inline, 1: memory mapped async mix, 2: callback mixing, 3: write async mix"
-#if defined( MACOS_X )
+#if defined( ID_SDL )
+idCVar com_asyncSound( "com_asyncSound", "3", CVAR_INTEGER|CVAR_SYSTEM|CVAR_ROM, ASYNCSOUND_INFO );
+#elif defined( MACOS_X )
 idCVar com_asyncSound( "com_asyncSound", "2", CVAR_INTEGER|CVAR_SYSTEM|CVAR_ROM, ASYNCSOUND_INFO );
 #elif defined( __linux__ )
 idCVar com_asyncSound( "com_asyncSound", "3", CVAR_INTEGER|CVAR_SYSTEM|CVAR_ROM, ASYNCSOUND_INFO );
@@ -193,7 +195,7 @@ private:
 	idStrList					warningList;
 	idStrList					errorList;
 
-	int							gameDLL;
+	intptr_t					gameDLL;
 
 	idLangDict					languageDict;
 
@@ -1426,7 +1428,9 @@ void Com_ExecMachineSpec_f( const idCmdArgs &args ) {
 		cvarSystem->SetCVarInteger( "image_useCompression", 0, CVAR_ARCHIVE );
 		cvarSystem->SetCVarInteger( "image_ignoreHighQuality", 0, CVAR_ARCHIVE );
 		cvarSystem->SetCVarInteger( "s_maxSoundsPerShader", 0, CVAR_ARCHIVE );
+#ifndef ID_SDL	// keep the desktop resolution, the presets are from the 4:3 CRT days
 		cvarSystem->SetCVarInteger( "r_mode", 5, CVAR_ARCHIVE );
+#endif
 		cvarSystem->SetCVarInteger( "image_useNormalCompression", 0, CVAR_ARCHIVE );
 		cvarSystem->SetCVarInteger( "r_multiSamples", 0, CVAR_ARCHIVE );
 	} else if ( com_machineSpec.GetInteger() == 2 ) {
@@ -1448,7 +1452,9 @@ void Com_ExecMachineSpec_f( const idCmdArgs &args ) {
 		cvarSystem->SetCVarInteger( "image_ignoreHighQuality", 0, CVAR_ARCHIVE );
 		cvarSystem->SetCVarInteger( "s_maxSoundsPerShader", 0, CVAR_ARCHIVE );
 		cvarSystem->SetCVarInteger( "image_useNormalCompression", 0, CVAR_ARCHIVE );
+#ifndef ID_SDL	// keep the desktop resolution, the presets are from the 4:3 CRT days
 		cvarSystem->SetCVarInteger( "r_mode", 4, CVAR_ARCHIVE );
+#endif
 		cvarSystem->SetCVarInteger( "r_multiSamples", 0, CVAR_ARCHIVE );
 	} else if ( com_machineSpec.GetInteger() == 1 ) {
 		cvarSystem->SetCVarString( "image_filter", "GL_LINEAR_MIPMAP_LINEAR", CVAR_ARCHIVE );
@@ -1466,7 +1472,9 @@ void Com_ExecMachineSpec_f( const idCmdArgs &args ) {
 		cvarSystem->SetCVarInteger( "image_downSizeSpecularLimit", 64, CVAR_ARCHIVE );
 		cvarSystem->SetCVarInteger( "image_downSizeBumpLimit", 256, CVAR_ARCHIVE );
 		cvarSystem->SetCVarInteger( "image_useNormalCompression", 2, CVAR_ARCHIVE );
+#ifndef ID_SDL	// keep the desktop resolution, the presets are from the 4:3 CRT days
 		cvarSystem->SetCVarInteger( "r_mode", 3, CVAR_ARCHIVE );
+#endif
 		cvarSystem->SetCVarInteger( "r_multiSamples", 0, CVAR_ARCHIVE );
 	} else {
 		cvarSystem->SetCVarString( "image_filter", "GL_LINEAR_MIPMAP_LINEAR", CVAR_ARCHIVE );
@@ -1485,7 +1493,9 @@ void Com_ExecMachineSpec_f( const idCmdArgs &args ) {
 		cvarSystem->SetCVarInteger( "image_downSizeBump", 1, CVAR_ARCHIVE );
 		cvarSystem->SetCVarInteger( "image_downSizeSpecularLimit", 64, CVAR_ARCHIVE );
 		cvarSystem->SetCVarInteger( "image_downSizeBumpLimit", 256, CVAR_ARCHIVE );
+#ifndef ID_SDL	// keep the desktop resolution, the presets are from the 4:3 CRT days
 		cvarSystem->SetCVarInteger( "r_mode", 3	, CVAR_ARCHIVE );
+#endif
 		cvarSystem->SetCVarInteger( "image_useNormalCompression", 2, CVAR_ARCHIVE );
 		cvarSystem->SetCVarInteger( "r_multiSamples", 0, CVAR_ARCHIVE );
 	}
@@ -2634,10 +2644,23 @@ void idCommonLocal::LoadGameDLL( void ) {
 	gameExport_t	gameExport;
 	GetGameAPI_t	GetGameAPI;
 
-	fileSystem->FindDLL( "game", dllPath, true );
+	// the game library is named after the game directory: base, d3xp or a mod name
+	idStr gameName = cvarSystem->GetCVarString( "fs_game" );
+	idStr gameBase = cvarSystem->GetCVarString( "fs_game_base" );
+	dllPath[ 0 ] = '\0';
+	if ( gameName.Length() ) {
+		fileSystem->FindDLL( gameName.c_str(), dllPath, true );
+	}
+	if ( !dllPath[ 0 ] && gameBase.Length() ) {
+		fileSystem->FindDLL( gameBase.c_str(), dllPath, true );
+	}
+	// asset only mods use the DOOM 3 game code, unless they are based on the expansion
+	if ( !dllPath[ 0 ] && gameName.Icmp( "d3xp" ) && gameBase.Icmp( "d3xp" ) ) {
+		fileSystem->FindDLL( BASE_GAMEDIR, dllPath, true );
+	}
 
 	if ( !dllPath[ 0 ] ) {
-		common->FatalError( "couldn't find game dynamic library" );
+		common->FatalError( "couldn't find game dynamic library for '%s'", gameName.Length() ? gameName.c_str() : BASE_GAMEDIR );
 		return;
 	}
 	common->DPrintf( "Loading game DLL: '%s'\n", dllPath );
@@ -2650,7 +2673,7 @@ void idCommonLocal::LoadGameDLL( void ) {
 	GetGameAPI = (GetGameAPI_t) Sys_DLL_GetProcAddress( gameDLL, "GetGameAPI" );
 	if ( !GetGameAPI ) {
 		Sys_DLL_Unload( gameDLL );
-		gameDLL = NULL;
+		gameDLL = 0;
 		common->FatalError( "couldn't find game DLL API" );
 		return;
 	}
@@ -2674,7 +2697,7 @@ void idCommonLocal::LoadGameDLL( void ) {
 
 	if ( gameExport.version != GAME_API_VERSION ) {
 		Sys_DLL_Unload( gameDLL );
-		gameDLL = NULL;
+		gameDLL = 0;
 		common->FatalError( "wrong game DLL API version" );
 		return;
 	}
@@ -2706,7 +2729,7 @@ void idCommonLocal::UnloadGameDLL( void ) {
 
 	if ( gameDLL ) {
 		Sys_DLL_Unload( gameDLL );
-		gameDLL = NULL;
+		gameDLL = 0;
 	}
 	game = NULL;
 	gameEdit = NULL;
@@ -2730,7 +2753,13 @@ idCommonLocal::SetMachineSpec
 */
 void idCommonLocal::SetMachineSpec( void ) {
 	cpuid_t	cpu = Sys_GetProcessorId();
+#ifdef ID_SDL
+	// the SDL timer frequency is not the CPU clock. Every CPU that runs a modern OS
+	// is way above what DOOM 3 considers an ultra quality machine
+	double ghz = 3.0;
+#else
 	double ghz = Sys_ClockTicksPerSecond() * 0.000000001f;
+#endif
 	int vidRam = Sys_GetVideoRam();
 	int sysRam = Sys_GetSystemRam();
 	bool oldCard = false;
@@ -2738,7 +2767,7 @@ void idCommonLocal::SetMachineSpec( void ) {
 
 	renderSystem->GetCardCaps( oldCard, nv10or20 );
 
-	Printf( "Detected\n \t%.2f GHz CPU\n\t%i MB of System memory\n\t%i MB of Video memory on %s\n\n", ghz, sysRam, vidRam, ( oldCard ) ? "a less than optimal video architecture" : "an optimal video architecture" );
+	Printf( "Detected\n \t%.2f GHz ( effective ) CPU\n\t%i MB of System memory\n\t%i MB of Video memory on %s\n\n", ghz, sysRam, vidRam, ( oldCard ) ? "a less than optimal video architecture" : "an optimal video architecture" );
 
 	if ( ghz >= 2.75f && vidRam >= 512 && sysRam >= 1024 && !oldCard ) {
 		Printf( "This system qualifies for Ultra quality!\n" );

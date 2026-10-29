@@ -30,7 +30,13 @@ If you have questions concerning this license or the applicable additional terms
 #pragma hdrstop
 
 #ifndef USE_LIBC_MALLOC
-	#define USE_LIBC_MALLOC		0
+	#define USE_LIBC_MALLOC		1
+#endif
+
+// the custom id heap stores pointers in 32 bit fields, it can't be used on 64-bit platforms
+#if !USE_LIBC_MALLOC && ( defined( _WIN64 ) || defined( __LP64__ ) )
+	#undef USE_LIBC_MALLOC
+	#define USE_LIBC_MALLOC		1
 #endif
 
 #ifndef CRASH_ON_STATIC_ALLOCATION
@@ -320,24 +326,22 @@ idHeap::Allocate16
 void *idHeap::Allocate16( const dword bytes ) {
 	byte *ptr, *alignedPtr;
 
-	ptr = (byte *) malloc( bytes + 16 + 4 );
+	ptr = (byte *) malloc( bytes + 16 + sizeof( void * ) );
 	if ( !ptr ) {
 		if ( defragBlock ) {
 			idLib::common->Printf( "Freeing defragBlock on alloc of %i.\n", bytes );
 			free( defragBlock );
 			defragBlock = NULL;
-			ptr = (byte *) malloc( bytes + 16 + 4 );			
+			ptr = (byte *) malloc( bytes + 16 + sizeof( void * ) );
 			AllocDefragBlock();
 		}
 		if ( !ptr ) {
 			common->FatalError( "malloc failure for %i", bytes );
 		}
 	}
-	alignedPtr = (byte *) ( ( (int) ptr ) + 15 & ~15 );
-	if ( alignedPtr - ptr < 4 ) {
-		alignedPtr += 16;
-	}
-	*((int *)(alignedPtr - 4)) = (int) ptr;
+	// keep the original pointer right in front of the aligned block
+	alignedPtr = (byte *) ( ( ( (uintptr_t) ptr ) + sizeof( void * ) + 15 ) & ~(uintptr_t)15 );
+	*((void **)(alignedPtr - sizeof( void * ))) = ptr;
 	return (void *) alignedPtr;
 }
 
@@ -347,7 +351,7 @@ idHeap::Free16
 ================
 */
 void idHeap::Free16( void *p ) {
-	free( (void *) *((int *) (( (byte *) p ) - 4)) );
+	free( *((void **) (( (byte *) p ) - sizeof( void * ))) );
 }
 
 /*

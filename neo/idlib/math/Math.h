@@ -63,17 +63,17 @@ If you have questions concerning this license or the applicable additional terms
 #define	ANGLE2BYTE(x)			( idMath::FtoiFast( (x) * 256.0f / 360.0f ) & 255 )
 #define	BYTE2ANGLE(x)			( (x) * ( 360.0f / 256.0f ) )
 
-#define FLOATSIGNBITSET(f)		((*(const unsigned long *)&(f)) >> 31)
-#define FLOATSIGNBITNOTSET(f)	((~(*(const unsigned long *)&(f))) >> 31)
-#define FLOATNOTZERO(f)			((*(const unsigned long *)&(f)) & ~(1<<31) )
-#define INTSIGNBITSET(i)		(((const unsigned long)(i)) >> 31)
-#define INTSIGNBITNOTSET(i)		((~((const unsigned long)(i))) >> 31)
+#define FLOATSIGNBITSET(f)		((*(const unsigned int *)&(f)) >> 31)
+#define FLOATSIGNBITNOTSET(f)	((~(*(const unsigned int *)&(f))) >> 31)
+#define FLOATNOTZERO(f)			((*(const unsigned int *)&(f)) & ~(1<<31) )
+#define INTSIGNBITSET(i)		(((const unsigned int)(i)) >> 31)
+#define INTSIGNBITNOTSET(i)		((~((const unsigned int)(i))) >> 31)
 
-#define	FLOAT_IS_NAN(x)			(((*(const unsigned long *)&x) & 0x7f800000) == 0x7f800000)
-#define FLOAT_IS_INF(x)			(((*(const unsigned long *)&x) & 0x7fffffff) == 0x7f800000)
-#define FLOAT_IS_IND(x)			((*(const unsigned long *)&x) == 0xffc00000)
-#define	FLOAT_IS_DENORMAL(x)	(((*(const unsigned long *)&x) & 0x7f800000) == 0x00000000 && \
-								 ((*(const unsigned long *)&x) & 0x007fffff) != 0x00000000 )
+#define	FLOAT_IS_NAN(x)			(((*(const unsigned int *)&x) & 0x7f800000) == 0x7f800000)
+#define FLOAT_IS_INF(x)			(((*(const unsigned int *)&x) & 0x7fffffff) == 0x7f800000)
+#define FLOAT_IS_IND(x)			((*(const unsigned int *)&x) == 0xffc00000)
+#define	FLOAT_IS_DENORMAL(x)	(((*(const unsigned int *)&x) & 0x7f800000) == 0x00000000 && \
+								 ((*(const unsigned int *)&x) & 0x007fffff) != 0x00000000 )
 
 #define IEEE_FLT_MANTISSA_BITS	23
 #define IEEE_FLT_EXPONENT_BITS	8
@@ -238,11 +238,11 @@ private:
 
 ID_INLINE float idMath::RSqrt( float x ) {
 
-	long i;
+	int i;
 	float y, r;
 
 	y = x * 0.5f;
-	i = *reinterpret_cast<long *>( &x );
+	i = *reinterpret_cast<int *>( &x );
 	i = 0x5f3759df - ( i >> 1 );
 	r = *reinterpret_cast<float *>( &i );
 	r = r * ( 1.5f - r * r * y );
@@ -386,7 +386,7 @@ ID_INLINE double idMath::Cos64( float a ) {
 }
 
 ID_INLINE void idMath::SinCos( float a, float &s, float &c ) {
-#ifdef _WIN32
+#if defined(_MSC_VER) && defined(_M_IX86)
 	_asm {
 		fld		a
 		fsincos
@@ -439,7 +439,7 @@ ID_INLINE void idMath::SinCos16( float a, float &s, float &c ) {
 }
 
 ID_INLINE void idMath::SinCos64( float a, double &s, double &c ) {
-#ifdef _WIN32
+#if defined(_MSC_VER) && defined(_M_IX86)
 	_asm {
 		fld		a
 		fsincos
@@ -797,7 +797,7 @@ ID_INLINE int idMath::Ftoi( float f ) {
 }
 
 ID_INLINE int idMath::FtoiFast( float f ) {
-#ifdef _WIN32
+#if defined(_MSC_VER) && defined(_M_IX86)
 	int i;
 	__asm fld		f
 	__asm fistp		i		// use default rouding mode (round nearest)
@@ -829,7 +829,7 @@ ID_INLINE unsigned long idMath::Ftol( float f ) {
 }
 
 ID_INLINE unsigned long idMath::FtolFast( float f ) {
-#ifdef _WIN32
+#if defined(_MSC_VER) && defined(_M_IX86)
 	// FIXME: this overflows on 31bits still .. same as FtoiFast
 	unsigned long i;
 	__asm fld		f

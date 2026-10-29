@@ -96,6 +96,9 @@ void idDeviceContext::SetFont( int num ) {
 
 void idDeviceContext::Init() {
 	xScale = 0.0;
+	fixScaleForMenu = false;
+	menuScaleX = 1.0f;
+	menuOffsetX = 0.0f;
 	SetSize(VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
 	whiteImage = declManager->FindMaterial("guis/assets/white.tga");
 	whiteImage->SetSort( SS_GUI );
@@ -255,7 +258,38 @@ bool idDeviceContext::ClippedCoords(float *x, float *y, float *w, float *h, floa
 }
 
 
+void idDeviceContext::SetMenuScaleFix( bool enable ) {
+	fixScaleForMenu = false;
+	menuScaleX = 1.0f;
+	menuOffsetX = 0.0f;
+	if ( !enable ) {
+		return;
+	}
+	float w = renderSystem->GetScreenWidth();
+	float h = renderSystem->GetScreenHeight();
+	if ( w <= 0.0f || h <= 0.0f || w * 3.0f <= h * 4.0f ) {
+		// 4:3 or narrower, nothing to fix
+		return;
+	}
+	fixScaleForMenu = true;
+	menuScaleX = ( h * 4.0f ) / ( w * 3.0f );
+	menuOffsetX = VIRTUAL_WIDTH * ( 1.0f - menuScaleX ) * 0.5f;
+}
+
+void idDeviceContext::AdjustCoordsForMenu( float *x, float *y, float *w, float *h ) {
+	if ( !fixScaleForMenu ) {
+		return;
+	}
+	if ( x ) {
+		*x = *x * menuScaleX + menuOffsetX;
+	}
+	if ( w ) {
+		*w *= menuScaleX;
+	}
+}
+
 void idDeviceContext::AdjustCoords(float *x, float *y, float *w, float *h) {
+	AdjustCoordsForMenu( x, y, w, h );
 	if (x) {
 		*x *= xScale;
 	}
@@ -636,9 +670,14 @@ void idDeviceContext::DrawCursor(float *x, float *y, float size) {
 		*y = vidHeight;
 	}
 
+	// don't modify the cursor position of the caller
+	float cx = *x;
+	float cy = *y;
+	float cw = size;
+	float ch = size;
 	renderSystem->SetColor(colorWhite);
-	AdjustCoords(x, y, &size, &size);
-	DrawStretchPic( *x, *y, size, size, 0, 0, 1, 1, cursorImages[cursor]);
+	AdjustCoords(&cx, &cy, &cw, &ch);
+	DrawStretchPic( cx, cy, cw, ch, 0, 0, 1, 1, cursorImages[cursor]);
 }
 /*
  =======================================================================================================================

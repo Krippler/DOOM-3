@@ -280,7 +280,7 @@ idEvent *idEvent::Alloc( const idEventDef *evdef, int numargs, va_list args ) {
 		switch( format[ i ] ) {
 		case D_EVENT_FLOAT :
 		case D_EVENT_INTEGER :
-			*reinterpret_cast<int *>( dataPtr ) = arg->value;
+			*reinterpret_cast<int *>( dataPtr ) = static_cast<int>( arg->value );
 			break;
 
 		case D_EVENT_VECTOR :
@@ -331,7 +331,7 @@ idEvent *idEvent::Alloc( const idEventDef *evdef, int numargs, va_list args ) {
 idEvent::CopyArgs
 ================
 */
-void idEvent::CopyArgs( const idEventDef *evdef, int numargs, va_list args, int data[ D_EVENT_MAXARGS ] ) {
+void idEvent::CopyArgs( const idEventDef *evdef, int numargs, va_list args, intptr_t data[ D_EVENT_MAXARGS ] ) {
 	int			i;
 	const char	*format;
 	idEventArg	*arg;
@@ -460,7 +460,7 @@ idEvent::ServiceEvents
 void idEvent::ServiceEvents( void ) {
 	idEvent		*event;
 	int			num;
-	int			args[ D_EVENT_MAXARGS ];
+	intptr_t	args[ D_EVENT_MAXARGS ];
 	int			offset;
 	int			i;
 	int			numargs;
@@ -488,6 +488,10 @@ void idEvent::ServiceEvents( void ) {
 			data = event->data;
 			switch( formatspec[ i ] ) {
 			case D_EVENT_FLOAT :
+				args[ i ] = 0;
+				*reinterpret_cast<float *>( &args[ i ] ) = *reinterpret_cast<float *>( &data[ offset ] );
+				break;
+
 			case D_EVENT_INTEGER :
 				args[ i ] = *reinterpret_cast<int *>( &data[ offset ] );
 				break;
@@ -780,7 +784,12 @@ void idEvent::RestoreTrace( idRestoreGame *savefile, trace_t &trace ) {
 	savefile->ReadVec3( trace.c.normal );
 	savefile->ReadFloat( trace.c.dist );
 	savefile->ReadInt( trace.c.contents );
-	savefile->ReadInt( (int&)trace.c.material );
+	{
+		// only whether there was a material matters, it's looked up by name later
+		int material;
+		savefile->ReadInt( material );
+		trace.c.material = reinterpret_cast<const idMaterial *>( (intptr_t)material );
+	}
 	savefile->ReadInt( trace.c.contents );
 	savefile->ReadInt( trace.c.modelFeature );
 	savefile->ReadInt( trace.c.trmFeature );
@@ -804,7 +813,7 @@ void idEvent::SaveTrace( idSaveGame *savefile, const trace_t &trace ) {
 	savefile->WriteVec3( trace.c.normal );
 	savefile->WriteFloat( trace.c.dist );
 	savefile->WriteInt( trace.c.contents );
-	savefile->WriteInt( (int&)trace.c.material );
+	savefile->WriteInt( trace.c.material != NULL ? 1 : 0 );
 	savefile->WriteInt( trace.c.contents );
 	savefile->WriteInt( trace.c.modelFeature );
 	savefile->WriteInt( trace.c.trmFeature );
@@ -850,7 +859,7 @@ void CreateEventCallbackHandler( void ) {
 					string1 += "const float";
 					string2 += va( "*( float * )&data[ %d ]", k );
 				} else {
-					string1 += "const int";
+					string1 += "const intptr_t";
 					string2 += va( "data[ %d ]", k );
 				}
 

@@ -181,7 +181,7 @@ static	void LinkEdge( optEdge_t *e ) {
 	e->v2->edges = e;
 }
 
-#ifdef __linux__
+#if 0 // old gcc 3.x optimizer workaround, see optimize_gcc.cpp
 
 optVertex_t *FindOptVertex( idDrawVert *v, optimizeGroup_t *opt );
 

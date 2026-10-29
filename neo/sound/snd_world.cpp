@@ -588,7 +588,7 @@ void idSoundWorldLocal::AVIUpdate() {
 	}
 
 	float	mix[MIXBUFFER_SAMPLES*6+16];
-	float	*mix_p = (float *)((( int)mix + 15 ) & ~15);	// SIMD align
+	float	*mix_p = (float *)((( intptr_t)mix + 15 ) & ~15);	// SIMD align
 
 	SIMDProcessor->Memset( mix_p, 0, MIXBUFFER_SAMPLES*sizeof(float)*numSpeakers );
 
@@ -1197,10 +1197,10 @@ void idSoundWorldLocal::WriteToSaveGameSoundChannel( idFile *saveGame, idSoundCh
 	saveGame->WriteInt( ch->trigger44kHzTime );
 	saveGame->WriteInt( ch->triggerGame44kHzTime );
 	WriteToSaveGameSoundShaderParams( saveGame, &ch->parms );
-	saveGame->WriteInt( (int)ch->leadinSample );
+	WritePointerAsInt( saveGame, ch->leadinSample );
 	saveGame->WriteInt( ch->triggerChannel );
-	saveGame->WriteInt( (int)ch->soundShader );
-	saveGame->WriteInt( (int)ch->decoder );
+	WritePointerAsInt( saveGame, ch->soundShader );
+	WritePointerAsInt( saveGame, ch->decoder );
 	saveGame->WriteFloat(ch->diversity );
 	saveGame->WriteFloat(ch->lastVolume );
 	for (int m = 0; m < 6; m++)
@@ -1368,10 +1368,10 @@ void idSoundWorldLocal::ReadFromSaveGameSoundChannel( idFile *saveGame, idSoundC
 	saveGame->ReadInt( ch->trigger44kHzTime );
 	saveGame->ReadInt( ch->triggerGame44kHzTime );
 	ReadFromSaveGameSoundShaderParams( saveGame, &ch->parms );
-	saveGame->ReadInt( (int&)ch->leadinSample );
+	ReadPointerAsInt( saveGame, ch->leadinSample );
 	saveGame->ReadInt( ch->triggerChannel );
-	saveGame->ReadInt( (int&)ch->soundShader );
-	saveGame->ReadInt( (int&)ch->decoder );
+	ReadPointerAsInt( saveGame, ch->soundShader );
+	ReadPointerAsInt( saveGame, ch->decoder );
 	saveGame->ReadFloat(ch->diversity );
 	saveGame->ReadFloat(ch->lastVolume );
 	for (int m = 0; m < 6; m++)
@@ -1713,7 +1713,7 @@ void idSoundWorldLocal::AddChannelContribution( idSoundEmitterLocal *sound, idSo
 	//
 	int offset = current44kHz - chan->trigger44kHzTime;
 	float inputSamples[MIXBUFFER_SAMPLES*2+16];
-	float *alignedInputSamples = (float *) ( ( ( (int)inputSamples ) + 15 ) & ~15 );
+	float *alignedInputSamples = (float *) ( ( ( (intptr_t)inputSamples ) + 15 ) & ~15 );
 
 	//
 	// allocate and initialize hardware source

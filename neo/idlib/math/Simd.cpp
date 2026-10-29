@@ -141,7 +141,7 @@ idSIMDProcessor *p_simd;
 idSIMDProcessor *p_generic;
 long baseClocks = 0;
 
-#ifdef _WIN32
+#if defined(_MSC_VER) && defined(_M_IX86)
 
 #define TIME_TYPE int
 
@@ -291,13 +291,14 @@ TIME_TYPE time_in_millisec( void ) {
 #endif
 #else
 
-#define TIME_TYPE int
+// portable high resolution timer
+#define TIME_TYPE int64_t
 
 #define StartRecordTime( start )			\
-	start = 0;
+	start = (int64_t)idLib::sys->GetClockTicks();
 
 #define StopRecordTime( end )				\
-	end = 1;
+	end = (int64_t)idLib::sys->GetClockTicks();
 
 #endif
 

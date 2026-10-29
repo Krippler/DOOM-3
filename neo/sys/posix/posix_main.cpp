@@ -259,6 +259,7 @@ EVENT LOOP
 ============================================================================
 */
 
+#ifndef ID_SDL
 #define	MAX_QUED_EVENTS		256
 #define	MASK_QUED_EVENTS	( MAX_QUED_EVENTS - 1 )
 
@@ -329,6 +330,8 @@ void Sys_ClearEvents( void ) {
 	eventHead = eventTail = 0;
 }
 
+#endif // !ID_SDL
+
 /*
 ================
 Posix_Cwd
@@ -385,12 +388,12 @@ Sys_DLL_Load
 TODO: OSX - use the native API instead? NSModule
 =================
 */
-int Sys_DLL_Load( const char *path ) {
+intptr_t Sys_DLL_Load( const char *path ) {
 	void *handle = dlopen( path, RTLD_NOW );
 	if ( !handle ) {
 		Sys_Printf( "dlopen '%s' failed: %s\n", path, dlerror() );
 	}
-	return (int)handle;
+	return (intptr_t)handle;
 }
 
 /*
@@ -398,7 +401,7 @@ int Sys_DLL_Load( const char *path ) {
 Sys_DLL_GetProcAddress
 =================
 */
-void* Sys_DLL_GetProcAddress( int handle, const char *sym ) {
+void* Sys_DLL_GetProcAddress( intptr_t handle, const char *sym ) {
 	const char *error;
 	void *ret = dlsym( (void *)handle, sym );
 	if ((error = dlerror()) != NULL)  {
@@ -412,7 +415,7 @@ void* Sys_DLL_GetProcAddress( int handle, const char *sym ) {
 Sys_DLL_Unload
 =================
 */
-void Sys_DLL_Unload( int handle ) {
+void Sys_DLL_Unload( intptr_t handle ) {
 	dlclose( (void *)handle );
 }
 
@@ -452,6 +455,7 @@ void Sys_Sleep(int msec) {
 		Sys_Printf("usleep: %s\n", strerror(errno));
 }
 
+#ifndef ID_SDL
 char *Sys_GetClipboardData(void) {
 	Sys_Printf( "TODO: Sys_GetClipboardData\n" );
 	return NULL;
@@ -460,6 +464,7 @@ char *Sys_GetClipboardData(void) {
 void Sys_SetClipboardData( const char *string ) {
 	Sys_Printf( "TODO: Sys_SetClipboardData\n" );
 }
+#endif // !ID_SDL
 	
 
 // stub pretty much everywhere - heavy calling
@@ -468,6 +473,7 @@ void Sys_FlushCacheMemory(void *base, int bytes)
 //  Sys_Printf("Sys_FlushCacheMemory stub\n");
 }
 
+#ifndef ID_SDL
 bool Sys_FPU_StackIsEmpty( void ) {
 	return true;
 }
@@ -481,6 +487,8 @@ const char *Sys_FPU_GetState( void ) {
 
 void Sys_FPU_SetPrecision( int precision ) {
 }
+
+#endif // !ID_SDL
 
 /*
 ================
@@ -972,6 +980,7 @@ char *Posix_ConsoleInput( void ) {
 	return NULL;
 }
 
+#ifndef ID_SDL
 /*
 called during frame loops, pacifier updates etc.
 this is only for console input polling and misc mouse grab tasks
@@ -989,6 +998,8 @@ void Sys_GenerateEvents( void ) {
 		Posix_QueEvent( SE_CONSOLE, 0, 0, len, b );
 	}
 }
+
+#endif // !ID_SDL
 
 /*
 ===============
@@ -1050,4 +1061,6 @@ void Sys_Error(const char *error, ...) {
 Sys_FreeOpenAL
 ===============
 */
+#ifndef ID_SDL
 void Sys_FreeOpenAL( void ) { }
+#endif

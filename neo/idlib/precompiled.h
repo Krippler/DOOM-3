@@ -42,25 +42,23 @@ If you have questions concerning this license or the applicable additional terms
 #ifndef _D3SDK
 #ifndef GAME_DLL
 
+#ifdef ID_NO_TOOLS
+// modern build: no MFC based editors
+#ifndef WINVER
+#define WINVER				0x0601
+#endif
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT		WINVER
+#endif
+#include <winsock2.h>
+#include <windows.h>
+#include <mmsystem.h>
+#include <mmreg.h>
+#else
+
 #define WINVER				0x501
 
-#if 0
-// Dedicated server hits unresolved when trying to link this way now. Likely because of the 2010/Win7 transition? - TTimo
-
-#ifdef	ID_DEDICATED
-// dedicated sets windows version here
-#define	_WIN32_WINNT WINVER
-#define	WIN32_LEAN_AND_MEAN
-#else
-// non-dedicated includes MFC and sets windows version here
-#include "../tools/comafx/StdAfx.h"			// this will go away when MFC goes away
-#endif
-
-#else
-
 #include "../tools/comafx/StdAfx.h"
-
-#endif
 
 #include <winsock2.h>
 #include <mmsystem.h>
@@ -71,6 +69,8 @@ If you have questions concerning this license or the applicable additional terms
 
 #include <dsound.h>
 #include <dinput.h>
+
+#endif /* ID_NO_TOOLS */
 
 #endif /* !GAME_DLL */
 #endif /* !_D3SDK */
@@ -93,6 +93,8 @@ If you have questions concerning this license or the applicable additional terms
 	#define NDEBUG
 #endif
 
+#include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>

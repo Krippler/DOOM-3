@@ -80,7 +80,11 @@ GetGameAPI
 #if __GNUC__ >= 4
 #pragma GCC visibility push(default)
 #endif
+#ifdef _WIN32
+extern "C" __declspec(dllexport) gameExport_t *GetGameAPI( gameImport_t *import ) {
+#else
 extern "C" gameExport_t *GetGameAPI( gameImport_t *import ) {
+#endif
 #if __MWERKS__
 #pragma export off
 #endif
@@ -2396,8 +2400,24 @@ void idGameLocal::CalcFov( float base_fov, float &fov_x, float &fov_y ) const {
 		Error( "idGameLocal::CalcFov: bad result" );
 	}
 
+	// base_fov is the horizontal field of view on a 4:3 screen. Wider screens keep
+	// the vertical field of view and see more to the sides ( "Hor+" )
 	switch( r_aspectRatio.GetInteger() ) {
 	default :
+	case -1 : {
+		// automatic, from the real render size
+		int w = renderSystem->GetScreenWidth();
+		int h = renderSystem->GetScreenHeight();
+		if ( w <= 0 || h <= 0 || w * 3 <= h * 4 ) {
+			// 4:3 or narrower ( 5:4 ), keep the classic field of view
+			fov_x = base_fov;
+			return;
+		}
+		ratio_x = (float)w;
+		ratio_y = (float)h;
+		break;
+	}
+
 	case 0 :
 		// 4:3
 		fov_x = base_fov;
@@ -2414,6 +2434,18 @@ void idGameLocal::CalcFov( float base_fov, float &fov_x, float &fov_y ) const {
 		// 16:10
 		ratio_x = 16.0f;
 		ratio_y = 10.0f;
+		break;
+
+	case 3 :
+		// 21:9 ( 64:27 )
+		ratio_x = 64.0f;
+		ratio_y = 27.0f;
+		break;
+
+	case 4 :
+		// 32:9
+		ratio_x = 32.0f;
+		ratio_y = 9.0f;
 		break;
 	}
 
