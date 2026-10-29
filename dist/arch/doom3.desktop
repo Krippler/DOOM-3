@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=DOOM 3
+Comment=DOOM 3 (64-bit GPL engine, needs the original game data)
+Exec=doom3
+Icon=doom3
+Terminal=false
+Categories=Game;ActionGame;

@@ -1,0 +1,41 @@
+# Arch Linux / CachyOS package of the 64-bit DOOM 3 GPL engine.
+# Builds from the repository this file is in:
+#   cd dist/arch && makepkg -si
+# The game data is not included, see /usr/share/doc/doom3-gpl/README.txt
+
+pkgname=doom3-gpl
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="DOOM 3 and Resurrection of Evil engine (id Software GPL source) for 64-bit Linux with SDL2 and widescreen support"
+arch=('x86_64')
+url="https://github.com/Krippler/DOOM-3"
+license=('GPL-3.0-or-later')
+depends=('sdl2' 'libgl' 'gcc-libs' 'glibc')
+makedepends=('cmake' 'ninja' 'openal' 'mesa')
+optdepends=('steam: the Steam copy of DOOM 3 is found automatically')
+# the 2004 code base is not tested with link time optimization
+options=('!lto' '!debug')
+source=()
+
+_srcroot="$(realpath "$startdir/../..")"
+
+build() {
+	cmake -S "$_srcroot/neo" -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX=/usr/lib/doom3
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+
+	install -Dm755 "$_srcroot/dist/arch/doom3.sh" "$pkgdir/usr/bin/doom3"
+	install -Dm644 "$_srcroot/dist/arch/doom3.desktop" "$pkgdir/usr/share/applications/doom3.desktop"
+	install -Dm644 "$_srcroot/dist/arch/doom3-roe.desktop" "$pkgdir/usr/share/applications/doom3-roe.desktop"
+	install -Dm644 "$_srcroot/neo/sys/linux/setup/image/doom3.png" "$pkgdir/usr/share/icons/hicolor/48x48/apps/doom3.png"
+
+	install -Dm644 "$_srcroot/dist/README-linux.txt" "$pkgdir/usr/share/doc/$pkgname/README.txt"
+	install -Dm644 "$_srcroot/BUILDING.md" "$pkgdir/usr/share/doc/$pkgname/BUILDING.md"
+	# the GPL comes with additional terms from id Software
+	install -Dm644 "$_srcroot/COPYING.txt" "$pkgdir/usr/share/licenses/$pkgname/COPYING.txt"
+}

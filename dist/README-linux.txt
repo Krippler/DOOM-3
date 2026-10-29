@@ -35,6 +35,21 @@ Then run:
 
 No CD key is needed.
 
+Arch Linux / CachyOS package
+----------------------------
+The doom3-gpl-*.pkg.tar.zst package from the release installs the same
+engine system wide ( sudo pacman -U doom3-gpl-*.pkg.tar.zst ), with
+application menu entries for DOOM 3 and Resurrection of Evil.  Its doom3
+command looks for the game data in, in this order:
+
+  $DOOM3_DATA
+  ~/.local/share/doom3          copy your base/ ( and d3xp/ ) folders here
+  ~/.doom3
+  the Steam copy of DOOM 3      found automatically
+  /usr/share/doom3, /usr/share/games/doom3
+
+Remove it with: sudo pacman -R doom3-gpl
+
 Resolutions
 -----------
 By default the game starts fullscreen at your desktop resolution
