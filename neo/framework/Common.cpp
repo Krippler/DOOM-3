@@ -54,6 +54,9 @@ struct version_s {
 
 idCVar com_version( "si_version", version.string, CVAR_SYSTEM|CVAR_ROM|CVAR_SERVERINFO, "engine version" );
 idCVar com_skipRenderer( "com_skipRenderer", "0", CVAR_BOOL|CVAR_SYSTEM, "skip the renderer completely" );
+// configs written by this version and later keep the video mode, older ones are upgraded
+static const int CONFIG_VERSION = 1;
+idCVar com_configVersion( "com_configVersion", "0", CVAR_INTEGER | CVAR_ARCHIVE | CVAR_SYSTEM | CVAR_NOCHEAT, "version of the settings in the config file, used to upgrade older config files" );
 idCVar com_machineSpec( "com_machineSpec", "-1", CVAR_INTEGER | CVAR_ARCHIVE | CVAR_SYSTEM, "hardware classification, -1 = not detected, 0 = low quality, 1 = medium quality, 2 = high quality, 3 = ultra quality" );
 idCVar com_purgeAll( "com_purgeAll", "0", CVAR_BOOL | CVAR_ARCHIVE | CVAR_SYSTEM, "purge everything between level loads" );
 idCVar com_memoryMarker( "com_memoryMarker", "-1", CVAR_INTEGER | CVAR_SYSTEM | CVAR_INIT, "used as a marker for memory stats" );
@@ -2995,9 +2998,32 @@ void idCommonLocal::InitGame( void ) {
 	cmdSystem->BufferCommandText( CMD_EXEC_APPEND, "exec default.cfg\n" );
 
 	// skip the config file if "safe" is on the command line
+	bool portConfig = false;
 	if ( !SafeMode() ) {
+		// configs written before com_configVersion existed: this port wrote
+		// r_scaleMenusTo43, the original game didn't
+		void *buffer;
+		if ( fileSystem->ReadFile( CONFIG_FILE, &buffer ) > 0 ) {
+			portConfig = strstr( ( const char * )buffer, "r_scaleMenusTo43" ) != NULL;
+			fileSystem->FreeFile( buffer );
+		}
 		cmdSystem->BufferCommandText( CMD_EXEC_APPEND, "exec " CONFIG_FILE "\n" );
 	}
+	cmdSystem->ExecuteCommandBuffer();
+
+	// without a config the video mode is the resolution of the monitor ( r_mode -2 ),
+	// a mode the player picked is kept. the configs of the original game have one of
+	// its 4:3 modes, usually 640x480, which nobody picked in this version
+	if ( com_configVersion.GetInteger() < 1 && !portConfig ) {
+		idCVar *mode = cvarSystem->Find( "r_mode" );
+		if ( mode && mode->GetInteger() != -2 ) {
+			Printf( "config file from the original game, using the resolution of the monitor\n" );
+			mode->SetInteger( -2 );
+		}
+	}
+	bool upgradeConfig = com_configVersion.GetInteger() < CONFIG_VERSION;
+	com_configVersion.SetInteger( CONFIG_VERSION );
+
 	cmdSystem->BufferCommandText( CMD_EXEC_APPEND, "exec autoexec.cfg\n" );
 
 	// reload the language dictionary now that we've loaded config files
@@ -3011,6 +3037,10 @@ void idCommonLocal::InitGame( void ) {
 
 	// if any archived cvars are modified after this, we will trigger a writing of the config file
 	cvarSystem->ClearModifiedFlags( CVAR_ARCHIVE );
+	if ( upgradeConfig ) {
+		// save the upgraded settings
+		cvarSystem->SetModifiedFlags( CVAR_ARCHIVE );
+	}
 
 	// cvars are initialized, but not the rendering system. Allow preference startup dialog
 	Sys_DoPreferences();
