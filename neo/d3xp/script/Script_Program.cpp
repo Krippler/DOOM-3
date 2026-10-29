@@ -38,12 +38,12 @@ idTypeDef	type_namespace( ev_namespace, &def_namespace, "namespace", sizeof( voi
 idTypeDef	type_string( ev_string, &def_string, "string", MAX_STRING_LEN, NULL );
 idTypeDef	type_float( ev_float, &def_float, "float", sizeof( float ), NULL );
 idTypeDef	type_vector( ev_vector, &def_vector, "vector", sizeof( idVec3 ), NULL );
-idTypeDef	type_entity( ev_entity, &def_entity, "entity", sizeof( int * ), NULL );					// stored as entity number pointer
+idTypeDef	type_entity( ev_entity, &def_entity, "entity", sizeof( int ), NULL );					// stored as entity number (pushed with Push( int ))
 idTypeDef	type_field( ev_field, &def_field, "field", sizeof( void * ), NULL );
 idTypeDef	type_function( ev_function, &def_function, "function", sizeof( void * ), &type_void );
 idTypeDef	type_virtualfunction( ev_virtualfunction, &def_virtualfunction, "virtual function", sizeof( int ), NULL );
 idTypeDef	type_pointer( ev_pointer, &def_pointer, "pointer", sizeof( void * ), NULL );
-idTypeDef	type_object( ev_object, &def_object, "object", sizeof( int * ), NULL );					// stored as entity number pointer
+idTypeDef	type_object( ev_object, &def_object, "object", sizeof( int ), NULL );					// stored as entity number (pushed with Push( int ))
 idTypeDef	type_jumpoffset( ev_jumpoffset, &def_jumpoffset, "<jump>", sizeof( int ), NULL );		// only used for jump opcodes
 idTypeDef	type_argsize( ev_argsize, &def_argsize, "<argsize>", sizeof( int ), NULL );				// only used for function call and thread opcodes
 idTypeDef	type_boolean( ev_boolean, &def_boolean, "boolean", sizeof( int ), NULL );
@@ -1230,6 +1230,23 @@ void idProgram::AddDefToNameList( idVarDef *def, const char *name ) {
 
 /*
 ============
+ResultDefSize
+
+The compiler turns the result of a field read (OP_INDIRECT_*) into a pointer
+when the field is assigned to (OP_ADDRESS), after its space was reserved for
+the field type. Pointers are bigger than ints and floats on 64-bit systems,
+so results always get room for a pointer.
+============
+*/
+static int ResultDefSize( int size, const char *name ) {
+	if ( !strcmp( name, RESULT_STRING ) && size < ( int )sizeof( void * ) ) {
+		return sizeof( void * );
+	}
+	return size;
+}
+
+/*
+============
 idProgram::AllocDef
 ============
 */
@@ -1311,16 +1328,16 @@ idVarDef *idProgram::AllocDef( idTypeDef *type, const char *name, idVarDef *scop
 
 		if ( type->Inherits( &type_object ) ) {
 			// objects only have their entity number on the stack, not the entire object
-			scope->value.functionPtr->locals += type_object.Size();
+			scope->value.functionPtr->locals += ResultDefSize( type_object.Size(), name );
 		} else {
-			scope->value.functionPtr->locals += type->Size();
+			scope->value.functionPtr->locals += ResultDefSize( type->Size(), name );
 		}
 	} else {
 		//
 		// global variable
 		//
 		def->value.bytePtr = &variables[ numVariables ];
-		numVariables += def->TypeDef()->Size();
+		numVariables += ResultDefSize( def->TypeDef()->Size(), name );
 		if ( numVariables > sizeof( variables ) ) {
 			throw idCompileError( va( "Exceeded global memory size (%d bytes)", sizeof( variables ) ) );
 		}

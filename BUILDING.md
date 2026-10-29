@@ -50,6 +50,9 @@ seta r_customHeight 1440
 vid_restart
 ```
 
+The resolution setting of the menus lists "Desktop" and every mode that
+fits the monitor; the original menus only offered 4:3 modes.
+
 Alt+Enter toggles fullscreen. Old `DoomConfig.cfg` files from the original
 game set `r_mode 3` (640x480); delete the file or `seta r_mode -2`.
 

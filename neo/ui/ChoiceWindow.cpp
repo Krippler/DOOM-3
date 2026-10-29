@@ -352,6 +352,20 @@ void idChoiceWindow::UpdateChoicesAndVals( void ) {
 
 void idChoiceWindow::PostParse() {
 	idWindow::PostParse();
+
+	// the menus of the game only know 4:3 resolutions and aspect ratios
+	if ( !idStr::Icmp( cvarStr.c_str(), "r_mode" ) ) {
+		idStr modeChoices, modeValues;
+		R_GetMenuModeList( modeChoices, modeValues );
+		choicesStr = modeChoices;
+		choiceVals = modeValues;
+		choiceType = 1;
+	} else if ( !idStr::Icmp( cvarStr.c_str(), "r_aspectRatio" ) ) {
+		choicesStr = "\"Auto\";\"4:3\";\"16:9\";\"16:10\";\"21:9\";\"32:9\"";
+		choiceVals = "-1;0;1;2;3;4";
+		choiceType = 1;
+	}
+
 	UpdateChoicesAndVals();
 
 	InitVars();

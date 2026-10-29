@@ -21,6 +21,8 @@ The game data is not included. No CD key is needed.
 - Includes the native 64-bit game code for DOOM 3 (`base.so`) and Resurrection of Evil (`d3xp.so`).
 
 ## Fixes
+- New games no longer stop with "locals stack underflow" while loading the first map: the script compiler sized entity and object values and object field pointers for 32-bit systems.
+- The resolution setting in the menus now lists the desktop resolution and all widescreen, ultrawide and 4K modes that fit the monitor.
 - Fixed a crash on the main menu (and in any other in-game video): the RoQ video decoder computed backwards motion offsets as 32-bit unsigned numbers.
 - Old `DoomConfig.cfg` files from the original game start it at 640x480. Delete them (`~/.doom3/base/DoomConfig.cfg` and `~/.local/share/doom3/base/DoomConfig.cfg`) or run `seta r_mode -2` in the console.
 
