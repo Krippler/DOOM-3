@@ -73,7 +73,11 @@ If you have questions concerning this license or the applicable additional terms
 #define PATHSEPERATOR_STR				"\\"
 #define PATHSEPERATOR_CHAR				'\\'
 
+#ifdef _MSC_VER
 #define ID_INLINE						__forceinline
+#else
+#define ID_INLINE						inline
+#endif
 #define ID_STATIC_TEMPLATE				static
 
 #define assertmem( x, y )				assert( _CrtIsValidPointer( x, y, true ) )

@@ -42,7 +42,7 @@ If you have questions concerning this license or the applicable additional terms
 #ifndef	ID_DEDICATED
 #include <comdef.h>
 #include <comutil.h>
-#include <Wbemidl.h>
+#include <wbemidl.h>
 
 #pragma comment (lib, "wbemuuid.lib")
 #endif
@@ -103,6 +103,7 @@ int Sys_GetDriveFreeSpace( const char *path ) {
 }
 
 
+#ifndef ID_SDL
 /*
 ================
 Sys_GetVideoRam
@@ -161,6 +162,8 @@ int Sys_GetVideoRam( void ) {
 	return retSize;
 #endif
 }
+
+#endif // !ID_SDL
 
 /*
 ================
@@ -640,6 +643,7 @@ void Sym_GetFuncInfo( long addr, idStr &module, idStr &funcName ) {
 
 #endif
 
+#if defined( _MSC_VER ) && defined( _M_IX86 )
 /*
 ==================
 GetFuncAddr
@@ -716,6 +720,23 @@ void Sys_GetCallStack( address_t *callStack, const int callStackSize ) {
 		callStack[i++] = 0;
 	}
 }
+
+#else
+
+/*
+==================
+Sys_GetCallStack
+
+ the frame pointer walk above is 32-bit x86 only
+==================
+*/
+void Sys_GetCallStack( address_t *callStack, const int callStackSize ) {
+	for ( int i = 0; i < callStackSize; i++ ) {
+		callStack[i] = 0;
+	}
+}
+
+#endif
 
 /*
 ==================

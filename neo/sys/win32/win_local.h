@@ -93,7 +93,7 @@ void	DisableTaskKeys( BOOL bDisable, BOOL bBeep, BOOL bTaskMgr );
 
 
 // window procedure
-LONG WINAPI MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+LRESULT WINAPI MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 void Conbuf_AppendText( const char *msg );
 
@@ -152,11 +152,13 @@ typedef struct {
 	CRITICAL_SECTION criticalSections[MAX_CRITICAL_SECTIONS];
 	HANDLE			backgroundDownloadSemaphore;
 
+#ifndef ID_SDL
 	HINSTANCE		hInstDI;			// direct input
 
 	LPDIRECTINPUT8			g_pdi;
 	LPDIRECTINPUTDEVICE8	g_pMouse;
 	LPDIRECTINPUTDEVICE8	g_pKeyboard;
+#endif
 
 	HANDLE			renderCommandsEvent;
 	HANDLE			renderCompletedEvent;

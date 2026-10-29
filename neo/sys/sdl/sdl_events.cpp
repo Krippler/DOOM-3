@@ -93,7 +93,12 @@ static void SDL_QueEvent( sysEventType_t type, int value, int value2, int ptrLen
 	ev->evPtr = ptr;
 }
 
-#ifndef _WIN32
+#ifdef _WIN32
+// the win32 dedicated console window queues its commands through this
+void Sys_QueEvent( int time, sysEventType_t type, int value, int value2, int ptrLength, void *ptr ) {
+	SDL_QueEvent( type, value, value2, ptrLength, ptr );
+}
+#else
 // the posix code still queues console events through this
 void Posix_QueEvent( sysEventType_t type, int value, int value2, int ptrLength, void *ptr ) {
 	SDL_QueEvent( type, value, value2, ptrLength, ptr );

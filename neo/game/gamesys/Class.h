@@ -62,6 +62,7 @@ public:
 	idEventArg()								{ type = D_EVENT_INTEGER; value = 0; };
 	idEventArg( int data )						{ type = D_EVENT_INTEGER; value = data; };
 	idEventArg( long data )						{ type = D_EVENT_INTEGER; value = (intptr_t)data; };	// NULL is a long on 64-bit gcc
+	idEventArg( long long data )				{ type = D_EVENT_INTEGER; value = (intptr_t)data; };	// and a long long on 64-bit MinGW
 	idEventArg( float data )					{ type = D_EVENT_FLOAT; value = 0; memcpy( &value, &data, sizeof( data ) ); };
 	idEventArg( idVec3 &data )					{ type = D_EVENT_VECTOR; value = reinterpret_cast<intptr_t>( &data ); };
 	idEventArg( const idStr &data )				{ type = D_EVENT_STRING; value = reinterpret_cast<intptr_t>( data.c_str() ); };

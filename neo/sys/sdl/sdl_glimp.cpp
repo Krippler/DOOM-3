@@ -440,7 +440,6 @@ void GLimp_DeactivateContext( void ) {
 	}
 }
 
-#ifndef _WIN32
 static idCVar sys_videoRam( "sys_videoRam", "0", CVAR_SYSTEM | CVAR_ARCHIVE | CVAR_INTEGER, "Texture memory on the video card (in megabytes) - 0: autodetect", 0, 65536 );
 
 /*
@@ -457,7 +456,6 @@ int Sys_GetVideoRam( void ) {
 	}
 	return 1024;
 }
-#endif
 
 /*
 ================

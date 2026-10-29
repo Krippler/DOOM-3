@@ -34,11 +34,9 @@ find_package(SDL2 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(Threads REQUIRED)
 
+# no SDL2main: Windows uses the engine's own WinMain ( see win_main.cpp )
 if(TARGET SDL2::SDL2)
 	set(SDL2_TARGETS SDL2::SDL2)
-	if(TARGET SDL2::SDL2main)
-		list(APPEND SDL2_TARGETS SDL2::SDL2main)
-	endif()
 else()
 	include_directories(${SDL2_INCLUDE_DIRS})
 	set(SDL2_TARGETS ${SDL2_LIBRARIES})
@@ -401,10 +399,7 @@ if(WIN32)
 		sys/win32/win_net.cpp
 		sys/win32/win_shared.cpp
 		sys/win32/win_syscon.cpp
-		sys/win32/win_cpu.cpp
-		sys/win32/win_taskkeyhook.cpp
 		sys/win32/win_stubs.cpp
-		openal/idal.cpp
 	)
 	set(SYS_LIBS winmm ws2_32 iphlpapi dbghelp)
 else()
@@ -417,10 +412,9 @@ else()
 		openal/stubs.cpp
 	)
 	if(APPLE)
-		list(APPEND SYS_SOURCES sys/sdl/sdl_main_posix.cpp)
-	else()
-		list(APPEND SYS_SOURCES sys/linux/main.cpp sys/linux/stack.cpp)
+		message(WARNING "macOS has not been tested with this build, expect to fix a few things")
 	endif()
+	list(APPEND SYS_SOURCES sys/linux/main.cpp sys/linux/stack.cpp)
 	set(SYS_LIBS ${CMAKE_DL_LIBS})
 endif()
 

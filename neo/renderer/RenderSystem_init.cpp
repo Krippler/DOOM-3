@@ -1875,7 +1875,7 @@ void GfxInfo_f( const idCmdArgs &args ) {
 		common->Printf( "glFinish not forced\n" );
 	}
 
-#ifdef _WIN32	
+#if defined( _WIN32 ) && !defined( ID_SDL )
 // WGL_EXT_swap_interval
 typedef BOOL (WINAPI * PFNWGLSWAPINTERVALEXTPROC) (int interval);
 extern	PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT;
