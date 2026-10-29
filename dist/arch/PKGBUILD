@@ -10,7 +10,7 @@ pkgdesc="DOOM 3 and Resurrection of Evil engine (id Software GPL source) for 64-
 arch=('x86_64')
 url="https://github.com/Krippler/DOOM-3"
 license=('GPL-3.0-or-later')
-depends=('sdl2' 'libgl' 'libgcc' 'libstdc++' 'glibc' 'hicolor-icon-theme')
+depends=('sh' 'sdl2' 'libgl' 'libgcc' 'libstdc++' 'glibc' 'hicolor-icon-theme')
 makedepends=('cmake' 'ninja' 'openal' 'mesa')
 optdepends=('steam: the Steam copy of DOOM 3 is found automatically')
 # the 2004 code base is not tested with link time optimization
