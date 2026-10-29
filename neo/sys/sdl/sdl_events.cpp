@@ -525,11 +525,26 @@ static void HandleWindowEvent( const SDL_WindowEvent &ev ) {
 
 /*
 ================
+FlushMouseMotion
+================
+*/
+static void FlushMouseMotion( int &motionX, int &motionY ) {
+	if ( motionX || motionY ) {
+		SDL_QueEvent( SE_MOUSE, motionX, motionY, 0, NULL );
+		AddMousePollEvent( M_DELTAX, motionX );
+		AddMousePollEvent( M_DELTAY, motionY );
+		motionX = motionY = 0;
+	}
+}
+
+/*
+================
 Sys_PumpSDLEvents
 ================
 */
 static void Sys_PumpSDLEvents( void ) {
 	SDL_Event ev;
+	int motionX = 0, motionY = 0;
 
 	while ( SDL_PollEvent( &ev ) ) {
 		switch ( ev.type ) {
@@ -552,18 +567,21 @@ static void Sys_PumpSDLEvents( void ) {
 
 			case SDL_MOUSEMOTION:
 				if ( grabActive && ( ev.motion.xrel || ev.motion.yrel ) ) {
-					SDL_QueEvent( SE_MOUSE, ev.motion.xrel, ev.motion.yrel, 0, NULL );
-					AddMousePollEvent( M_DELTAX, ev.motion.xrel );
-					AddMousePollEvent( M_DELTAY, ev.motion.yrel );
+					// high polling rate mice send thousands of events per second,
+					// queue the sum instead of overflowing the event buffers
+					motionX += ev.motion.xrel;
+					motionY += ev.motion.yrel;
 				}
 				break;
 
 			case SDL_MOUSEBUTTONDOWN:
 			case SDL_MOUSEBUTTONUP:
+				FlushMouseMotion( motionX, motionY );
 				HandleMouseButton( ev.button );
 				break;
 
 			case SDL_MOUSEWHEEL:
+				FlushMouseMotion( motionX, motionY );
 				HandleWheel( ev.wheel );
 				break;
 
@@ -571,6 +589,7 @@ static void Sys_PumpSDLEvents( void ) {
 				break;
 		}
 	}
+	FlushMouseMotion( motionX, motionY );
 }
 
 /*
