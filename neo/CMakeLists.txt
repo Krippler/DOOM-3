@@ -35,6 +35,15 @@ find_package(SDL2 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(Threads REQUIRED)
 
+if(NOT WIN32)
+	# only the OpenAL headers are used ( for types ), the engine never links or loads OpenAL
+	find_path(OPENAL_INCLUDE_DIR AL/al.h)
+	if(NOT OPENAL_INCLUDE_DIR)
+		message(FATAL_ERROR "OpenAL headers (AL/al.h) not found. Install libopenal-dev (Debian/Ubuntu), openal (Arch) or openal-soft-devel (Fedora).")
+	endif()
+	include_directories(${OPENAL_INCLUDE_DIR})
+endif()
+
 # no SDL2main: Windows uses the engine's own WinMain ( see win_main.cpp )
 if(TARGET SDL2::SDL2)
 	set(SDL2_TARGETS SDL2::SDL2)

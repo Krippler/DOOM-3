@@ -77,8 +77,9 @@ contains `doom3`, `base.so`, `d3xp.so`, `README.txt` (from
 
 ```sh
 # Debian / Ubuntu
-sudo apt install build-essential cmake libsdl2-dev libgl-dev
-# Fedora: sudo dnf install gcc-c++ cmake SDL2-devel mesa-libGL-devel
+sudo apt install build-essential cmake libsdl2-dev libgl-dev libopenal-dev
+# Fedora:      sudo dnf install gcc-c++ cmake SDL2-devel mesa-libGL-devel openal-soft-devel
+# CachyOS/Arch: sudo pacman -S --needed base-devel cmake sdl2 mesa openal
 
 cmake -S neo -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j
