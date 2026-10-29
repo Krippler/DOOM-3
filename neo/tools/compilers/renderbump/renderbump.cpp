@@ -29,7 +29,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "../../../idlib/precompiled.h"
 #pragma hdrstop
 
-#ifdef WIN32
+#if defined( WIN32 ) && !defined( ID_SDL )
 #include <windows.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -123,7 +123,7 @@ ResizeWindow
 ===============
 */
 static void ResizeWindow( int width, int height ) {
-#ifdef WIN32
+#if defined( WIN32 ) && !defined( ID_SDL )
 	int	winWidth, winHeight;
 	if ( glConfig.isFullscreen ) {
 		winWidth = width;
@@ -154,7 +154,7 @@ RestoreWindow
 ===============
 */
 static void RestoreWindow( void ) {
-#ifdef WIN32
+#if defined( WIN32 ) && !defined( ID_SDL )
 	int	winWidth, winHeight;
 	if ( glConfig.isFullscreen ) {
 		winWidth = oldWidth;

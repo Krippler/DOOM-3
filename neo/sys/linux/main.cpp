@@ -44,6 +44,7 @@ If you have questions concerning this license or the applicable additional terms
 static idStr	basepath;
 static idStr	savepath;
 
+#ifndef ID_SDL
 /*
 ===========
 Sys_InitScanTable
@@ -52,6 +53,8 @@ Sys_InitScanTable
 void Sys_InitScanTable( void ) {
 	common->DPrintf( "TODO: Sys_InitScanTable\n" );
 }
+
+#endif // !ID_SDL
 
 /*
 =================
@@ -181,6 +184,7 @@ const char *Sys_DefaultBasePath(void) {
 	return LINUX_DEFAULT_PATH;
 }
 
+#ifndef ID_SDL
 /*
 ===============
 Sys_GetConsoleKey
@@ -189,6 +193,8 @@ Sys_GetConsoleKey
 unsigned char Sys_GetConsoleKey( bool shifted ) {
 	return shifted ? '~' : '`';
 }
+
+#endif // !ID_SDL
 
 /*
 ===============
@@ -201,6 +207,7 @@ void Sys_Shutdown( void ) {
 	Posix_Shutdown();
 }
 
+#ifndef ID_SDL
 /*
 ===============
 Sys_GetProcessorId
@@ -227,6 +234,8 @@ Sys_FPU_EnableExceptions
 void Sys_FPU_EnableExceptions( int exceptions ) {
 }
 
+#endif // !ID_SDL
+
 /*
 ===============
 Sys_FPE_handler
@@ -237,6 +246,7 @@ void Sys_FPE_handler( int signum, siginfo_t *info, void *context ) {
 	Sys_Printf( "FPE\n" );
 }
 
+#ifndef ID_SDL
 /*
 ===============
 Sys_GetClockticks
@@ -329,6 +339,8 @@ double Sys_ClockTicksPerSecond(void) {
 	common->Printf( "measured CPU frequency: %g MHz\n", ret / 1000000.0 );
 	return ret;		
 }
+
+#endif // !ID_SDL
 
 /*
 ================
@@ -467,6 +479,7 @@ void idSysLocal::OpenURL( const char *url, bool quit ) {
  */
 void Sys_DoPreferences( void ) { }
 
+#ifndef ID_SDL
 /*
 ================
 Sys_FPU_SetDAZ
@@ -512,6 +525,8 @@ void Sys_FPU_SetFTZ( bool enable ) {
 	}
 	*/
 }
+
+#endif // !ID_SDL
 
 /*
 ===============

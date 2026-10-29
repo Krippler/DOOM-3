@@ -28,6 +28,10 @@ If you have questions concerning this license or the applicable additional terms
 #include "../../../idlib/precompiled.h"
 #pragma hdrstop
 
+#ifndef HUGE
+#define HUGE HUGE_VAL
+#endif
+
 #include "codec.h"
 
 float glimit( const float val ) {

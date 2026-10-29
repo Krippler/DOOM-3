@@ -1,6 +1,9 @@
 Doom 3 GPL source release
 =========================
 
+To build and run on modern 64-bit Windows and Linux with widescreen,
+ultrawide and 4K support, see BUILDING.md.
+
 This file contains the following sections:
 
 GENERAL NOTES

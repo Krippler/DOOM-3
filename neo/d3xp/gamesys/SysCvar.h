@@ -207,6 +207,8 @@ extern idCVar	pm_airTics;
 
 extern idCVar	g_showPlayerShadow;
 extern idCVar	g_showHud;
+extern idCVar	g_hudScaleTo43;
+extern idCVar	g_crosshairScaleTo43;
 extern idCVar	g_showProjectilePct;
 extern idCVar	g_showBrass;
 extern idCVar	g_gun_x;

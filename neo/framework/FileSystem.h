@@ -83,6 +83,14 @@ typedef enum {
 	DL_FAILED
 } dlStatus_t;
 
+// some Windows SDKs define these as macros
+#ifdef FILE_EXEC
+#undef FILE_EXEC
+#endif
+#ifdef FILE_OPEN
+#undef FILE_OPEN
+#endif
+
 typedef enum {
 	FILE_EXEC,
 	FILE_OPEN

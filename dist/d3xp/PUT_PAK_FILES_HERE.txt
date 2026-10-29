@@ -1,0 +1,3 @@
+For Resurrection of Evil, copy pak000.pk4 and pak001.pk4 from the d3xp
+directory of your installation into this directory, then run
+./doom3 +set fs_game d3xp

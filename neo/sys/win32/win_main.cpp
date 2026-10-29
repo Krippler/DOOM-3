@@ -36,7 +36,11 @@ If you have questions concerning this license or the applicable additional terms
 #include <io.h>
 #include <conio.h>
 #include <mapi.h>
-#include <ShellAPI.h>
+#include <shellapi.h>
+#include <objbase.h>
+#ifdef ID_SDL
+#include <SDL.h>
+#endif
 
 #ifndef __MRC__
 #include <sys/types.h>
@@ -97,7 +101,7 @@ void Sys_CreateThread(  xthread_t function, void *parms, xthreadPriority priorit
 									parms,	// LPVOID lpvThreadParm,
 									0,		//   DWORD fdwCreate,
 									&info.threadId);
-	info.threadHandle = (int) temp;
+	info.threadHandle = (intptr_t) temp;
 	if (priority == THREAD_HIGHEST) {
 		SetThreadPriority( (HANDLE)info.threadHandle, THREAD_PRIORITY_HIGHEST );		//  we better sleep enough to do this
 	} else if (priority == THREAD_ABOVE_NORMAL ) {
@@ -444,6 +448,7 @@ void Sys_Sleep( int msec ) {
 	Sleep( msec );
 }
 
+#ifndef ID_SDL
 /*
 ==============
 Sys_ShowWindow
@@ -461,6 +466,8 @@ Sys_IsWindowVisible
 bool Sys_IsWindowVisible( void ) {
 	return ( ::IsWindowVisible( win32.hWnd ) != 0 );
 }
+
+#endif // !ID_SDL
 
 /*
 ==============
@@ -542,7 +549,7 @@ Sys_ListFiles
 int Sys_ListFiles( const char *directory, const char *extension, idStrList &list ) {
 	idStr		search;
 	struct _finddata_t findinfo;
-	int			findhandle;
+	intptr_t	findhandle;
 	int			flag;
 
 	if ( !extension) {
@@ -579,6 +586,7 @@ int Sys_ListFiles( const char *directory, const char *extension, idStrList &list
 }
 
 
+#ifndef ID_SDL
 /*
 ================
 Sys_GetClipboardData
@@ -642,6 +650,8 @@ void Sys_SetClipboardData( const char *string ) {
 	CloseClipboard();
 }
 
+#endif // !ID_SDL
+
 /*
 ========================================================================
 
@@ -655,7 +665,7 @@ DLL Loading
 Sys_DLL_Load
 =====================
 */
-int Sys_DLL_Load( const char *dllName ) {
+intptr_t Sys_DLL_Load( const char *dllName ) {
 	HINSTANCE	libHandle;
 	libHandle = LoadLibrary( dllName );
 	if ( libHandle ) {
@@ -664,11 +674,11 @@ int Sys_DLL_Load( const char *dllName ) {
 		GetModuleFileName( libHandle, loadedPath, sizeof( loadedPath ) - 1 );
 		if ( idStr::IcmpPath( dllName, loadedPath ) ) {
 			Sys_Printf( "ERROR: LoadLibrary '%s' wants to load '%s'\n", dllName, loadedPath );
-			Sys_DLL_Unload( (int)libHandle );
+			Sys_DLL_Unload( (intptr_t)libHandle );
 			return 0;
 		}
 	}
-	return (int)libHandle;
+	return (intptr_t)libHandle;
 }
 
 /*
@@ -676,7 +686,7 @@ int Sys_DLL_Load( const char *dllName ) {
 Sys_DLL_GetProcAddress
 =====================
 */
-void *Sys_DLL_GetProcAddress( int dllHandle, const char *procName ) {
+void *Sys_DLL_GetProcAddress( intptr_t dllHandle, const char *procName ) {
 	return GetProcAddress( (HINSTANCE)dllHandle, procName ); 
 }
 
@@ -685,7 +695,7 @@ void *Sys_DLL_GetProcAddress( int dllHandle, const char *procName ) {
 Sys_DLL_Unload
 =====================
 */
-void Sys_DLL_Unload( int dllHandle ) {
+void Sys_DLL_Unload( intptr_t dllHandle ) {
 	if ( !dllHandle ) {
 		return;
 	}
@@ -713,6 +723,7 @@ EVENT LOOP
 ========================================================================
 */
 
+#ifndef ID_SDL
 #define	MAX_QUED_EVENTS		256
 #define	MASK_QUED_EVENTS	( MAX_QUED_EVENTS - 1 )
 
@@ -851,6 +862,8 @@ sysEvent_t Sys_GetEvent( void ) {
 }
 
 //================================================================
+
+#endif // !ID_SDL
 
 /*
 =================
@@ -1037,6 +1050,7 @@ void Sys_Init( void ) {
 		win32.sys_arch.SetString( "unknown Windows variant" );
 	}
 
+#ifndef ID_SDL
 	//
 	// CPU type
 	//
@@ -1116,6 +1130,8 @@ void Sys_Init( void ) {
 	}
 
 	common->Printf( "%s\n", win32.sys_cpustring.GetString() );
+#endif // !ID_SDL
+
 	common->Printf( "%d MB System Memory\n", Sys_GetSystemRam() );
 	common->Printf( "%d MB Video Memory\n", Sys_GetVideoRam() );
 }
@@ -1129,6 +1145,7 @@ void Sys_Shutdown( void ) {
 	CoUninitialize();
 }
 
+#ifndef ID_SDL
 /*
 ================
 Sys_GetProcessorId
@@ -1146,6 +1163,8 @@ Sys_GetProcessorString
 const char *Sys_GetProcessorString( void ) {
 	return win32.sys_cpustring.GetString();
 }
+
+#endif // !ID_SDL
 
 //=======================================================================
 
@@ -1167,6 +1186,7 @@ void Win_Frame( void ) {
 	}
 }
 
+#if defined( _MSC_VER ) && defined( _M_IX86 )
 extern "C" { void _chkstk( int size ); };
 void clrstk( void );
 
@@ -1195,6 +1215,9 @@ void HackChkStk( void ) {
 	TestChkStk();
 }
 
+#endif
+
+#ifndef ID_SDL
 /*
 ====================
 GetExceptionCodeInfo
@@ -1349,6 +1372,8 @@ EXCEPTION_DISPOSITION __cdecl _except_handler( struct _EXCEPTION_RECORD *Excepti
     return ExceptionContinueExecution;
 }
 
+#endif // !ID_SDL
+
 #define TEST_FPU_EXCEPTIONS	/*	FPU_EXCEPTION_INVALID_OPERATION |		*/	\
 							/*	FPU_EXCEPTION_DENORMALIZED_OPERAND |	*/	\
 							/*	FPU_EXCEPTION_DIVIDE_BY_ZERO |			*/	\
@@ -1363,6 +1388,11 @@ WinMain
 ==================
 */
 int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow ) {
+
+#ifdef ID_SDL
+	// we have our own WinMain, SDL doesn't need to provide one
+	SDL_SetMainReady();
+#endif
 
 	const HCURSOR hcurSave = ::SetCursor( LoadCursor( 0, IDC_WAIT ) );
 
@@ -1410,7 +1440,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	common->Printf( Sys_FPU_GetState() );
 #endif
 
-#ifndef	ID_DEDICATED
+#if !defined( ID_DEDICATED ) && !defined( ID_SDL )
 	if ( win32.win_notaskkeys.GetInteger() ) {
 		DisableTaskKeys( TRUE, FALSE, /*( win32.win_notaskkeys.GetInteger() == 2 )*/ FALSE );
 	}
@@ -1505,6 +1535,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	return 0;
 }
 
+#if defined( _MSC_VER ) && defined( _M_IX86 )
 /*
 ====================
 clrstk
@@ -1540,6 +1571,8 @@ __declspec( naked ) void clrstk( void ) {
         ret
 	}
 }
+
+#endif
 
 /*
 ==================

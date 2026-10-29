@@ -621,7 +621,7 @@ void VPCALL idSIMD_SSE::Dot( float *dst, const idVec3 &constant, const idPlane *
 	*/
 }
 
-#elif defined(_WIN32)
+#elif defined(_MSC_VER) && defined(_M_IX86)
 
 #include <xmmintrin.h>
 
@@ -1950,7 +1950,7 @@ float SSE_ATan( float y, float x ) {
 	if ( fabs( y ) > fabs( x ) ) {
 		a = -x / y;
 		d = idMath::HALF_PI;
-		*((unsigned long *)&d) ^= ( *((unsigned long *)&x) ^ *((unsigned long *)&y) ) & (1<<31);
+		*((unsigned int *)&d) ^= ( *((unsigned int *)&x) ^ *((unsigned int *)&y) ) & (1<<31);
 	} else {
 		a = y / x;
 		d = 0.0f;

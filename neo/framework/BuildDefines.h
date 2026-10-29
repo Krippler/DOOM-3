@@ -92,7 +92,7 @@ If you have questions concerning this license or the applicable additional terms
 //#define ID_DEMO_BUILD
 
 // don't define ID_ALLOW_TOOLS when we don't want tool code in the executable.
-#if defined( _WIN32 ) && !defined( ID_DEDICATED ) && !defined( ID_DEMO_BUILD )
+#if defined( _WIN32 ) && !defined( ID_DEDICATED ) && !defined( ID_DEMO_BUILD ) && !defined( ID_NO_TOOLS )
 	#define	ID_ALLOW_TOOLS
 #endif
 
@@ -118,7 +118,7 @@ If you have questions concerning this license or the applicable additional terms
 #endif
 
 #ifndef ID_OPENAL
-#	if ( defined(_WIN32) || defined(MACOS_X) ) && !defined( ID_DEDICATED )
+#	if ( defined(_WIN32) || defined(MACOS_X) ) && !defined( ID_DEDICATED ) && !defined( ID_SDL )
 #		define ID_OPENAL 1
 #	else
 #		define ID_OPENAL 0
@@ -126,7 +126,7 @@ If you have questions concerning this license or the applicable additional terms
 #endif
 
 #ifndef ID_ALLOW_D3XP
-#	if defined( MACOS_X )
+#	if defined( MACOS_X ) && !defined( ID_SDL )
 #		define ID_ALLOW_D3XP 0
 #	else
 #		define ID_ALLOW_D3XP 1

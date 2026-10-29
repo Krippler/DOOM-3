@@ -113,6 +113,28 @@ public:
 };
 
 
+/*
+	Some demo and save game code writes pointers as 32 bit integers, only to restore
+	whether the pointer was NULL or not. These keep that file format on 64-bit platforms.
+*/
+template< class type >
+ID_INLINE int ReadPointerAsInt( idFile *f, type *&ptr ) {
+	int value = 0;
+	int result = f->ReadInt( value );
+	ptr = reinterpret_cast<type *>( (intptr_t)value );
+	return result;
+}
+
+template< class pointerType >
+ID_INLINE int WritePointerAsInt( idFile *f, pointerType ptr ) {
+	int value = (int)(intptr_t)ptr;
+	if ( ptr != NULL && value == 0 ) {
+		value = 1;	// make sure a non NULL pointer never reads back as NULL
+	}
+	return f->WriteInt( value );
+}
+
+
 class idFile_Memory : public idFile {
 	friend class			idFileSystemLocal;
 

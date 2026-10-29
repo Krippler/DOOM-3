@@ -2615,11 +2615,13 @@ void idPlayer::DrawHUD( idUserInterface *_hud ) {
 
 	weapon.GetEntity()->UpdateGUI();
 
+	_hud->SetStateBool( "scaleto43", g_hudScaleTo43.GetBool() );
 	_hud->Redraw( gameLocal.realClientTime );
 
 	// weapon targeting crosshair
 	if ( !GuiActive() ) {
 		if ( cursor && weapon.GetEntity()->ShowCrosshair() ) {
+			cursor->SetStateBool( "scaleto43", g_crosshairScaleTo43.GetBool() );
 			cursor->Redraw( gameLocal.realClientTime );
 		}
 	}

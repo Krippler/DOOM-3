@@ -921,6 +921,9 @@ void idSessionLocal::StartPlayingRenderDemo( idStr demoName ) {
 	// bring up the loading screen manually, since demos won't
 	// call ExecuteMapChange()
 	guiLoading = uiManager->FindGui( "guis/map/loading.gui", true, false, true );
+	if ( guiLoading ) {
+		guiLoading->SetStateBool( "scaleto43", true );
+	}
 	guiLoading->SetStateString( "demo", common->GetLanguageDict()->GetString( "#str_02087" ) );
 	readDemo = new idDemoFile;
 	demoName.DefaultFileExtension( ".demo" );
@@ -1349,6 +1352,9 @@ void idSessionLocal::StartPlayingCmdDemo(const char *demoName) {
 	}
 
 	guiLoading = uiManager->FindGui( "guis/map/loading.gui", true, false, true );
+	if ( guiLoading ) {
+		guiLoading->SetStateBool( "scaleto43", true );
+	}
 	//cmdDemoFile->Read(&loadGameTime, sizeof(loadGameTime));
 
 	LoadCmdDemoFromFile(cmdDemoFile);
@@ -1448,8 +1454,14 @@ void idSessionLocal::LoadLoadingGui( const char *mapName ) {
 
 	if ( uiManager->CheckGui( guiMap ) ) {
 		guiLoading = uiManager->FindGui( guiMap, true, false, true );
+		if ( guiLoading ) {
+			guiLoading->SetStateBool( "scaleto43", true );
+		}
 	} else {
 		guiLoading = uiManager->FindGui( "guis/map/loading.gui", true, false, true );
+		if ( guiLoading ) {
+			guiLoading->SetStateBool( "scaleto43", true );
+		}
 	}
 	guiLoading->SetStateFloat( "map_loading", 0.0f );
 }
@@ -2373,6 +2385,9 @@ void idSessionLocal::Draw() {
 
 	if ( insideExecuteMapChange ) {
 		if ( guiLoading ) {
+			// black bars when the loading screen is drawn 4:3 on a wide screen
+			renderSystem->SetColor( colorBlack );
+			renderSystem->DrawStretchPic( 0, 0, 640, 480, 0, 0, 1, 1, declManager->FindMaterial( "_white" ) );
 			guiLoading->Redraw( com_frameTime );
 		}
 		if ( guiActive == guiMsg ) {
@@ -2386,6 +2401,9 @@ void idSessionLocal::Draw() {
 		renderSystem->DrawStretchPic( 0, 0, 640, 480, 0, 0, 1, 1, declManager->FindMaterial( "_white" ) );
 		guiTest->Redraw( com_frameTime );
 	} else if ( guiActive && !guiActive->State().GetBool( "gameDraw" ) ) {
+		// clear the background, the menus may not cover a wide screen
+		renderSystem->SetColor( colorBlack );
+		renderSystem->DrawStretchPic( 0, 0, 640, 480, 0, 0, 1, 1, declManager->FindMaterial( "_white" ) );
 		
 		// draw the frozen gui in the background
 		if ( guiActive == guiMsg && guiMsgRestore ) {
@@ -2905,17 +2923,35 @@ void idSessionLocal::Init() {
 	// we have a single instance of the main menu
 #ifndef ID_DEMO_BUILD
 	guiMainMenu = uiManager->FindGui( "guis/mainmenu.gui", true, false, true );
+	if ( guiMainMenu ) {
+		guiMainMenu->SetStateBool( "scaleto43", true );
+	}
 #else
 	guiMainMenu = uiManager->FindGui( "guis/demo_mainmenu.gui", true, false, true );
+	if ( guiMainMenu ) {
+		guiMainMenu->SetStateBool( "scaleto43", true );
+	}
 #endif
 	guiMainMenu_MapList = uiManager->AllocListGUI();
 	guiMainMenu_MapList->Config( guiMainMenu, "mapList" );
 	idAsyncNetwork::client.serverList.GUIConfig( guiMainMenu, "serverList" );
 	guiRestartMenu = uiManager->FindGui( "guis/restart.gui", true, false, true );
+	if ( guiRestartMenu ) {
+		guiRestartMenu->SetStateBool( "scaleto43", true );
+	}
 	guiGameOver = uiManager->FindGui( "guis/gameover.gui", true, false, true );
+	if ( guiGameOver ) {
+		guiGameOver->SetStateBool( "scaleto43", true );
+	}
 	guiMsg = uiManager->FindGui( "guis/msg.gui", true, false, true );
+	if ( guiMsg ) {
+		guiMsg->SetStateBool( "scaleto43", true );
+	}
 	guiTakeNotes = uiManager->FindGui( "guis/takeNotes.gui", true, false, true );
 	guiIntro = uiManager->FindGui( "guis/intro.gui", true, false, true );
+	if ( guiIntro ) {
+		guiIntro->SetStateBool( "scaleto43", true );
+	}
 
 	whiteMaterial = declManager->FindMaterial( "_white" );
 

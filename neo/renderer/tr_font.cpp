@@ -343,8 +343,11 @@ bool idRenderSystemLocal::RegisterFont( const char *fontName, fontInfoEx_t &font
 
 		idStr::Copynz( outFont->name, name, sizeof( outFont->name ) );
 
+		// the font files have the layout of the 32-bit fontInfo_t ( with a 4 byte glyph pointer ),
+		// so sizeof( fontInfo_t ) can't be used to validate them on 64-bit platforms
+		const int fontFileSize = GLYPHS_PER_FONT * ( 7 * 4 + 4 * 4 + 4 + 32 ) + 4 + 64;
 		len = fileSystem->ReadFile( name, NULL, &ftime );
-		if ( len != sizeof( fontInfo_t ) ) {
+		if ( len != fontFileSize ) {
 			common->Warning( "RegisterFont: couldn't find font: '%s'", name );
 			return false;
 		}

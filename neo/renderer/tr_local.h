@@ -1084,6 +1084,13 @@ bool		GLimp_Init( glimpParms_t parms );
 bool		GLimp_SetScreenParms( glimpParms_t parms );
 // will set up gl up with the new parms
 
+#ifdef ID_SDL
+bool		GLimp_GetDesktopSize( int *width, int *height );
+// returns the native resolution of the monitor the game runs on
+#endif
+
+// will set up gl up with the new parms
+
 void		GLimp_Shutdown( void );
 // Destroys the rendering context, closes the window, resets the resolution,
 // and resets the gamma ramps.

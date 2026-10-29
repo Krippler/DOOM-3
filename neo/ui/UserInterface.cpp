@@ -34,6 +34,9 @@ If you have questions concerning this license or the applicable additional terms
 #include "Window.h"
 #include "UserInterfaceLocal.h"
 
+idCVar r_scaleMenusTo43( "r_scaleMenusTo43", "1", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_BOOL, "draw full screen menus ( main menu, PDA, loading screens ) with a 4:3 aspect ratio on wide screens instead of stretching them" );
+
+
 extern idCVar r_skipGuiShaders;		// 1 = don't render any gui elements on surfaces
 
 idUserInterfaceManagerLocal	uiManagerLocal;
@@ -371,18 +374,38 @@ void idUserInterfaceLocal::Redraw( int _time ) {
 	}
 	if ( !loading && desktop ) {
 		time = _time;
+		bool scaleTo43 = ScaleTo43();
+		uiManagerLocal.dc.SetMenuScaleFix( scaleTo43 );
 		uiManagerLocal.dc.PushClipRect( uiManagerLocal.screenRect );
 		desktop->Redraw( 0, 0 );
 		uiManagerLocal.dc.PopClipRect();
+		uiManagerLocal.dc.SetMenuScaleFix( false );
 	}
 }
 
+/*
+==============
+idUserInterfaceLocal::ScaleTo43
+
+full screen menus ( flagged with "menugui" or the "scaleto43" state ) are drawn in 4:3,
+GUIs on world surfaces and the HUD are not
+==============
+*/
+bool idUserInterfaceLocal::ScaleTo43() const {
+	if ( !r_scaleMenusTo43.GetBool() || !desktop ) {
+		return false;
+	}
+	return ( desktop->GetFlags() & WIN_MENUGUI ) != 0 || state.GetBool( "scaleto43" );
+}
+
 void idUserInterfaceLocal::DrawCursor() {
+	uiManagerLocal.dc.SetMenuScaleFix( ScaleTo43() );
 	if ( !desktop || desktop->GetFlags() & WIN_MENUGUI ) {
 		uiManagerLocal.dc.DrawCursor(&cursorX, &cursorY, 32.0f );
 	} else {
 		uiManagerLocal.dc.DrawCursor(&cursorX, &cursorY, 64.0f );
 	}
+	uiManagerLocal.dc.SetMenuScaleFix( false );
 }
 
 const idDict &idUserInterfaceLocal::State() const {

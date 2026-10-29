@@ -108,27 +108,27 @@ void idSysLocal::ShutdownSymbols( void ) {
 	Sys_ShutdownSymbols();
 }
 
-int idSysLocal::DLL_Load( const char *dllName ) {
+intptr_t idSysLocal::DLL_Load( const char *dllName ) {
 	return Sys_DLL_Load( dllName );
 }
 
-void *idSysLocal::DLL_GetProcAddress( int dllHandle, const char *procName ) {
+void *idSysLocal::DLL_GetProcAddress( intptr_t dllHandle, const char *procName ) {
 	return Sys_DLL_GetProcAddress( dllHandle, procName );
 }
 
-void idSysLocal::DLL_Unload( int dllHandle ) {
+void idSysLocal::DLL_Unload( intptr_t dllHandle ) {
 	Sys_DLL_Unload( dllHandle );
 }
 
 void idSysLocal::DLL_GetFileName( const char *baseName, char *dllName, int maxLength ) {
+	// game libraries are named after the game directory they belong to ( base, d3xp, ... )
+	// this also keeps us from extracting the original 32-bit gamex86 libraries from the paks
 #ifdef _WIN32
-	idStr::snPrintf( dllName, maxLength, "%s" CPUSTRING ".dll", baseName );
-#elif defined( __linux__ )
-	idStr::snPrintf( dllName, maxLength, "%s" CPUSTRING ".so", baseName );
-#elif defined( MACOS_X )
+	idStr::snPrintf( dllName, maxLength, "%s" ".dll", baseName );
+#elif defined( __APPLE__ )
 	idStr::snPrintf( dllName, maxLength, "%s" ".dylib", baseName );
 #else
-#error OS define is required
+	idStr::snPrintf( dllName, maxLength, "%s" ".so", baseName );
 #endif
 }
 

@@ -559,8 +559,10 @@ const void	RB_SwapBuffers( const void *data ) {
 
     RB_LogComment( "***************** RB_SwapBuffers *****************\n\n\n" );
 
-	// don't flip if drawing to front buffer
-	if ( !r_frontBuffer.GetBool() ) {
+	// don't flip if drawing to front buffer, or while taking a screenshot:
+	// the screenshot code reads the back buffer, the front buffer can't be
+	// read reliably with modern drivers and compositors
+	if ( !r_frontBuffer.GetBool() && !tr.takingScreenshot ) {
 	    GLimp_SwapBuffers();
 	}
 }
